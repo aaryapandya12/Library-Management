@@ -1,0 +1,223 @@
+<div class="container py-3">
+  <div class="mb-5 text-center">
+    <h1 class="fw-bold text-black">Welcome to Our Library</h1>
+    <p class="lead text-muted">
+      Discover your next great read from our curated collection
+    </p>
+  </div>
+
+  <div class="row mb-4 justify-content-center">
+    <div class="col-md-4">
+      <select class="form-select shadow-sm" id="categoryFilter">
+        <option value="all" selected>All Categories</option>
+        <option value="Fiction">Fiction</option>
+        <option value="Non-fiction">Non-fiction</option>
+        <option value="Science & Technology">Science & Technology</option>
+        <option value="Biographies">Biographies</option>
+        <option value="History">History</option>
+        <option value="Self-help">Self-help</option>
+        <option value="Thriller">Thriller</option>
+        <option value="Romance">Romance</option>
+        <option value="Adventure">Adventure</option>
+        <option value="Fantasy">Fantasy</option>
+        <option value="Historical Fiction">Historical Fiction</option>
+        <option value="Drama">Drama</option>
+      </select>
+    </div>
+  </div>
+
+  <div
+    class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4"
+    id="books-container"
+  ></div>
+</div>
+
+<style>
+  .book-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 123, 255, 0.15);
+    border-color: rgba(0, 123, 255, 0.2);
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 4px 8px;
+  }
+
+  .btn-primary {
+    border: none;
+  }
+
+  .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    border-color: rgba(13, 110, 253, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .book-image {
+      height: 200px;
+    }
+  }
+</style>
+
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+  rel="stylesheet"
+/>
+
+<script>
+  const BOOKS_API = "http://localhost:3000/books";
+  const AUTHORS_API = "http://localhost:3000/authors";
+
+  let libraryData = {
+    authors: [],
+    books: [],
+  };
+
+  async function fetchData() {
+    try {
+      const [booksResponse, authorsResponse] = await Promise.all([
+        fetch(BOOKS_API),
+        fetch(AUTHORS_API),
+      ]);
+
+      if (!booksResponse.ok || !authorsResponse.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
+      libraryData.books = await booksResponse.json();
+      libraryData.authors = await authorsResponse.json();
+
+      renderBooks();
+      setupEventListeners();
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      document.getElementById("books-container").innerHTML = `
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
+        <p class="mt-3">Failed to load books. Please try again later.</p>
+      </div>
+    `;
+    }
+  }
+
+  function getAuthorById(authorId) {
+    return libraryData.authors.find((author) => author.id === authorId);
+  }
+
+  function getBadgeColor(genre) {
+    const colorMap = {
+      'Fiction': 'primary',
+      'Thriller': 'danger',
+      'Romance': 'warning',
+      'Adventure': 'dark',
+      'Fantasy': 'purple',
+      'Historical Fiction': 'brown',
+      'Drama': 'indigo',
+      'Non-fiction': 'info',
+      'Science & Technology': 'success',
+      'Biographies': 'secondary',
+      'History': 'dark',
+      'Self-help': 'success'
+    };
+    return colorMap[genre] || 'secondary';
+  }
+
+  function renderBooks(filter = 'all') {
+    const booksContainer = document.getElementById("books-container");
+    booksContainer.innerHTML = "";
+
+    let filteredBooks = libraryData.books;
+    
+    if (filter !== 'all') {
+      filteredBooks = filteredBooks.filter(book => book.Genre === filter);
+    }
+
+    if (filteredBooks.length === 0) {
+      booksContainer.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="bi bi-book text-muted fs-1"></i>
+          <p class="mt-3">No books found in this category</p>
+        </div>
+      `;
+      return;
+    }
+
+    filteredBooks.forEach((book) => {
+      const author = getAuthorById(book.AuthorID);
+      const badgeColor = getBadgeColor(book.Genre);
+
+      const bookCard = document.createElement("div");
+      bookCard.className = "col";
+      bookCard.innerHTML = `
+      <div class="card h-100 border-0 shadow-sm book-card">
+        <div class="card-body p-3">
+          <h5 class="card-title mb-1">${book.Title}</h5>
+          <p class="text-muted small mb-2">by ${
+            author ? author.AuthorName : "Unknown Author"
+          }</p>
+          <div class="d-flex gap-2 mb-3">
+            <span class="badge bg-${badgeColor} bg-opacity-10 text-${badgeColor}">
+              ${book.Genre}
+            </span>
+          </div>
+          <p class="card-text small text-muted mb-0">
+            ${book.Description || "No description available."}
+          </p>
+        </div>
+        <div class="card-footer bg-transparent border-0 p-3 pt-0">
+          <button class="btn btn-primary btn-sm w-100" onclick="borrowBook(${
+            book.BookID
+          })">
+            <i class="bi bi-bookmark-plus me-1"></i>Borrow
+          </button>
+          <button class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="saveBook(${
+            book.BookID
+          })">
+            <i class="bi bi-bookmark-heart me-1"></i>Save for Later
+          </button>
+        </div>
+      </div>
+    `;
+      booksContainer.appendChild(bookCard);
+    });
+  }
+
+  function setupEventListeners() {
+    document.getElementById('categoryFilter').addEventListener('change', (e) => {
+      renderBooks(e.target.value);
+    });
+  }
+
+  function borrowBook(bookId) {
+    const book = libraryData.books.find((b) => b.BookID === bookId);
+    if (book && book.AvailableCopies > 0) {
+      alert(`You have borrowed "${book.Title}". Enjoy your reading!`);
+    } else {
+      alert("Sorry, this book is currently not available for borrowing.");
+    }
+  }
+
+  function saveBook(bookId) {
+    const book = libraryData.books.find((b) => b.BookID === bookId);
+    if (book) {
+      alert(`"${book.Title}" has been added to your saved list.`);
+    }
+  }
+
+  fetchData();
+</script>

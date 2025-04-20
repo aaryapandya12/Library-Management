@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div
+        class="container-fluid d-flex align-items-center justify-content-between"
+      >
+        <a class="navbar-brand fw-semibold" href="#" id="panelTitle" onclick="loadPage('pages/dashboard.html')"
+          >📚Library Admin Panel</a
+        >
+
+        <div class="d-flex align-items-center ms-auto">
+          <form
+            class="d-flex align-items-center me-3"
+            role="search"
+            style="max-width: 300px"
+          >
+            <input
+              class="form-control rounded-start"
+              type="search"
+              placeholder="Search books, members..."
+              aria-label="Search"
+            />
+            <button class="btn btn-light rounded-end" type="submit">
+              <i class="fa fa-search text-primary"></i>
+            </button>
+          </form>
+
+          <div id="cartIcon" class="me-3 d-none">
+            <a
+              href="#"
+              class="text-white position-relative"
+              onclick="loadPage('cart.html')"
+            ></a>
+          </div>
+
+          <div class="dropdown">
+            <a
+              class="nav-link dropdown-toggle text-white"
+              href="#"
+              data-bs-toggle="dropdown"
+            >
+              <i class="fa fa-user"></i> <span id="userRoleDisplay">Admin</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item" href="#" id="switchRoleBtn"
+                  >Switch to User</a
+                >
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><a class="dropdown-item" href="#">Settings</a></li>
+              <li><a class="dropdown-item" href="#">My Profile</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="d-flex">
+      <div
+        class="bg-dark text-white sidebar p-3"
+        style="width: 250px; min-height: 100vh"
+      >
+        <ul class="nav flex-column" id="adminSidebar">
+          <li class="nav-item">
+            <a
+              class="nav-link text-white dropdown-toggle"
+              data-bs-toggle="collapse"
+              href="#dashboardMenu"
+              role="button"
+              aria-expanded="false"
+            >
+              <i class="fa fa-tachometer-alt me-2"></i> Manage
+            </a>
+            <div class="collapse" id="dashboardMenu">
+              <ul class="nav flex-column ms-3">
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link text-white"
+                    onclick="loadPage('pages/total_books.html')"
+                    >Total Books</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link text-white"
+                    onclick="loadPage('pages/author.html')"
+                    >Author Master</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link text-white"
+                    onclick="loadPage('pages/books_issued.html')"
+                    >Books Issued</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="nav-link text-white"
+                    onclick="loadPage('pages/registered_members.html')"
+                    >Registered Members</a
+                  >
+                </li>
+          
+              </ul>
+            </div>
+          </li>
+
+          
+
+          <li class="nav-item">
+            <a
+              href="#"
+              class="nav-link text-white"
+              onclick="loadPage('pages/reports.html')"
+            >
+              <i class="fa fa-file-alt me-2"></i> Reports
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+              href="#"
+              class="nav-link text-white"
+              onclick="loadPage('pages/user_queries.html')"
+            >
+              <i class="fa fa-question-circle me-2"></i> User Queries
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+              href="#"
+              class="nav-link text-white"
+              onclick="loadPage('pages/notifications.html')"
+            >
+              <i class="fa fa-bell me-2"></i> Notification
+            </a>
+          </li>
+
+          <li class="nav-item mt-auto">
+            <a
+              href="pages/login.html"
+              class="nav-link text-white"
+            >
+              <i class="fa fa-sign-out-alt me-2"></i> Logout
+            </a>
+          </li>
+        </ul>
+
+        <ul class="nav flex-column d-none" id="userSidebar">
+          <li class="nav-item">
+            <a
+              href="#"
+              class="nav-link text-white"
+              onclick="loadPage('pages/user_dashboard.html')"
+            >
+              <i class="fa fa-home me-2"></i> Home
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+              href="#"
+              class="nav-link text-white"
+              onclick="loadPage('pages/my_books.html')"
+            >
+              <i class="fa fa-book-open me-2"></i> My Books
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+              href="#"
+              class="nav-link text-white"
+              onclick="loadPage('pages/borrowing_history.html')"
+            >
+              <i class="fa fa-history me-2"></i> History
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+              href="#"
+              class="nav-link text-white"
+              onclick="loadPage('pages/contact.html')"
+            >
+              <i class="fa fa-envelope me-2"></i> Contact
+            </a>
+          </li>
+
+          <li class="nav-item mt-auto">
+            <a
+              href="pages/login.html"
+              class="nav-link text-white"
+            >
+              <i class="fa fa-sign-out-alt me-2"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="p-4" style="flex: 1" id="main-wrapper">
+        <div id="main-content" class="p-4" style="margin-left: 10px"></div>
+      </div>
+    </div>
+
+    <footer class="text-white text-center py-3">
+      &copy; 2025 Library Management Dashboard. All rights reserved.
+    </footer>
+    <script src="js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+  </body>
+</html>

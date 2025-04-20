@@ -1,0 +1,266 @@
+{
+  "authors": [
+    {
+      "AuthorName": "Agastha",
+      "Bio": "English writer known for her detective novels and short stories.",
+      "id": "003"
+    },
+    {
+      "id": "004",
+      "AuthorName": "Dan Brown",
+      "Bio": "American author best known for thriller novels like The Da Vinci Code."
+    },
+    {
+      "id": "005",
+      "AuthorName": "Jane Austen",
+      "Bio": "English novelist known for Pride and Prejudice and other classics."
+    },
+    {
+      "id": "006",
+      "AuthorName": "Mark Twain",
+      "Bio": "American writer and humorist, best known for The Adventures of Tom Sawyer."
+    },
+    {
+      "id": "007",
+      "AuthorName": "Ernest Hemingway",
+      "Bio": "American novelist and short-story writer known for his economical writing style."
+    },
+    {
+      "id": "008",
+      "AuthorName": "C.S. Lewis",
+      "Bio": "British writer and theologian, famous for The Chronicles of Narnia."
+    },
+    {
+      "id": "009",
+      "AuthorName": "Leo Tolstoy",
+      "Bio": "Russian author, best known for War and Peace and Anna Karenina."
+    }
+  ],
+  "books":[
+    {
+      "Title": "Da Vinci Code",
+      "AuthorID": "004",
+      "Genre": "Thriller",
+      "TotalCopies": 10,
+      "AvailableCopies": 6,
+      "BookID": 2,
+      "id": "8d1a",
+      "Description": "A murder mystery that uncovers a religious conspiracy protected by a secret society for two thousand years."
+    },
+    {
+      "BookID": 3,
+      "Title": "Pride and Prejudice",
+      "AuthorID": "005",
+      "Genre": "Romance",
+      "TotalCopies": 8,
+      "AvailableCopies": 5,
+      "id": "d109",
+      "Description": "The romantic clash between the opinionated Elizabeth and her proud beau, Mr. Darcy."
+    },
+    {
+      "BookID": 4,
+      "Title": "The Adventures of Tom Sawyer",
+      "AuthorID": "006",
+      "Genre": "Adventure",
+      "TotalCopies": 6,
+      "AvailableCopies": 3,
+      "id": "97b9",
+      "Description": "The adventures of a mischievous young boy and his friends growing up in a small town on the Mississippi River."
+    },
+    {
+      "BookID": 5,
+      "Title": "The Old Man and the Sea",
+      "AuthorID": "007",
+      "Genre": "Fiction",
+      "TotalCopies": 7,
+      "AvailableCopies": 2,
+      "id": "731b",
+      "Description": "The story of an aging fisherman's struggle with a giant marlin far out in the Gulf Stream."
+    },
+ 
+    {
+      "BookID": 7,
+      "Title": "War and Peace",
+      "AuthorID": "009",
+      "Genre": "Historical Fiction",
+      "TotalCopies": 4,
+      "AvailableCopies": 2,
+      "id": "1791",
+      "Description": "A novel that chronicles the French invasion of Russia and the impact of the Napoleonic era on Tsarist society."
+    },
+    {
+      "BookID": 8,
+      "Title": "Anna Karenina",
+      "AuthorID": "009",
+      "Genre": "Drama",
+      "TotalCopies": 6,
+      "AvailableCopies": 3,
+      "id": "4e29",
+      "Description": "A tragic story of love and betrayal among the Russian aristocracy in the 19th century."
+    }
+  ],
+  "users": [
+    {
+      "UserID": 1,
+      "Name": "Admin User",
+      "Email": "admin@library.com",
+      "Password": "admin123",
+      "Phone": "555-0101",
+      "UserType": "admin",
+      "id": "d53b"
+    },
+    {
+      "UserID": 2,
+      "Name": "John Doe",
+      "Email": "john.doe@example.com",
+      "Password": "user123",
+      "Phone": "555-0202",
+      "UserType": "user",
+      "id": "d11b"
+    },
+    {
+      "UserID": 3,
+      "Name": "Jane Smith",
+      "Email": "jane.smith@example.com",
+      "Password": "jane123",
+      "Phone": "555-0303",
+      "UserType": "user",
+      "id": "8d1e"
+    },
+    {
+      "UserID": 4,
+      "Name": "Library Staff",
+      "Email": "staff@library.com",
+      "Password": "staff123",
+      "Phone": "555-0404",
+      "UserType": "admin",
+      "id": "b04c"
+    },
+    {
+      "UserID": 5,
+      "id": "7b71",
+      "Name": "Aarya Santosh Pandya",
+      "Email": "aaryapandya@gmail.com",
+      "Password": "aarya@123",
+      "Mobile": "9322147415",
+      "UserType": "user"
+    },
+    {
+      "UserID": 6,
+      "id": "fba9",
+      "Name": "Aarya Santosh Pandya",
+      "Email": "aaryapandya611@gmail.com",
+      "Password": "aarya@1212",
+      "Mobile": "9322147415",
+      "UserType": "user"
+    },
+    {
+      "id": "3143",
+      "Name": "Aarya Santosh Pandya",
+      "Email": "aaryapandya6112@gmail.com",
+      "Password": "aarya1212",
+      "Mobile": "9322147415",
+      "UserType": "admin"
+    },
+    {
+      "id": "fccb",
+      "Name": "Dipali",
+      "Email": "dipali@gmail.com",
+      "Phone": "9665332864",
+      "UserType": "user",
+      "UserID": 7
+    },
+    {
+      "id": "fb05",
+      "Name": "Aarya Santosh Pandya",
+      "Email": "aaryapandya6114@gmail.com",
+      "Password": "aarya1234",
+      "Mobile": "9322147415",
+      "UserType": "user"
+    }
+  ],
+  "borrowRecords": [
+    {
+      "RecordID": 2,
+      "BookID": 3,
+      "UserID": 3,
+      "BorrowDate": "2023-06-15",
+      "DueDate": "2023-07-15",
+      "ReturnDate": "2025-04-17",
+      "Status": "returned",
+      "id": "2"
+    },
+    {
+      "RecordID": 3,
+      "BookID": 5,
+      "UserID": 2,
+      "BorrowDate": "2023-07-01",
+      "DueDate": "2023-08-01",
+      "ReturnDate": "2025-04-19",
+      "Status": "returned",
+      "id": "3"
+    },
+    {
+      "RecordID": 4,
+      "BookID": 7,
+      "UserID": 3,
+      "BorrowDate": "2023-06-20",
+      "DueDate": "2023-07-20",
+      "ReturnDate": "2023-07-18",
+      "Status": "returned",
+      "id": "4"
+    },
+    {
+      "RecordID": 5,
+      "BookID": 4,
+      "UserID": 2,
+      "BorrowDate": "2023-08-05",
+      "DueDate": "2023-09-05",
+      "ReturnDate": "",
+      "Status": "borrowed",
+      "id": "5"
+    },
+    {
+      "RecordID": 6,
+      "BookID": 6,
+      "UserID": 3,
+      "BorrowDate": "2023-07-10",
+      "DueDate": "2023-08-10",
+      "ReturnDate": "2023-08-05",
+      "Status": "returned",
+      "id": "6"
+    },
+    {
+      "RecordID": 7,
+      "BookID": 8,
+      "UserID": 2,
+      "BorrowDate": "2023-08-15",
+      "DueDate": "2023-09-15",
+      "ReturnDate": "",
+      "Status": "borrowed",
+      "id": "7"
+    }
+  ],
+  "queries": [
+    {
+      "QueryID": 124,
+      "UserID": 2,
+      "Subject": "Book return extension request",
+      "Message": "Dear Library Admin,\n\nI'm currently reading \"The Silent Patient\" which is due for return on May 18th. I'm really enjoying the book but won't be able to finish it by the due date as I have exams coming up.\n\nCould you please extend my return date by one week? I would really appreciate it.\n\nThank you,\nSarah Johnson",
+      "Date": "2025-05-15",
+      "Status": "Pending",
+      "AdminResponse": "",
+      "id": "q1"
+    },
+    {
+      "QueryID": 126,
+      "UserID": 2,
+      "Subject": "Membership renewal question",
+      "Message": "Hi,\n\nMy membership is expiring next month. Could you let me know what the renewal process is and if there are any fees involved?\n\nThanks,\nJohn Doe",
+      "Date": "2025-05-18",
+      "Status": "Pending",
+      "AdminResponse": "",
+      "id": "q3"
+    }
+  ]
+}

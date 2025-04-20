@@ -1,0 +1,218 @@
+<div class="row g-3" style="height: 580px">
+  <div class="col-12 d-flex justify-content-end">
+    <button class="btn btn-primary btn-sm mb-2" id="saveReportBtn">
+      <i class="fas fa-download fa-sm"></i> Save Report
+    </button>
+  </div>
+
+<div class="row g-3" style="height: 580px">
+  <div class="col-md-4 d-flex flex-column" style="height: 250px">
+    <div class="card flex-grow-1">
+      <div class="card-header bg-white p-2">
+        <h6 class="mb-0">Genre Distribution</h6>
+      </div>
+      <div class="card-body p-2" style="height: 180px">
+        <canvas id="genreChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 d-flex flex-column" style="height: 250px">
+    <div class="card flex-grow-1">
+      <div class="card-header bg-white p-2">
+        <h6 class="mb-0">Top Borrowed Books</h6>
+      </div>
+      <div class="card-body p-2" style="height: 180px">
+        <canvas id="topBooksChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 d-flex flex-column" style="height: 250px">
+    <div class="card flex-grow-1">
+      <div class="card-header bg-white p-2">
+        <h6 class="mb-0">Book Availability</h6>
+      </div>
+      <div class="card-body p-2" style="height: 180px">
+        <canvas id="availabilityChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 d-flex flex-column" style="height: 250px">
+    <div class="card flex-grow-1">
+      <div class="card-header bg-white p-2">
+        <h6 class="mb-0">Monthly Borrowing</h6>
+      </div>
+      <div class="card-body p-2" style="height: 180px">
+        <canvas id="monthlyTrendChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 d-flex flex-column" style="height: 250px">
+    <div class="card flex-grow-1">
+      <div class="card-header bg-white p-2">
+        <h6 class="mb-0">Overdue Books</h6>
+      </div>
+      <div class="card-body p-2" style="height: 180px">
+        <canvas id="overdueChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const libraryStats = {
+    genres: {
+      Fiction: 2,
+      Romance: 1,
+      Adventure: 1,
+      Thriller: 1,
+      Fantasy: 1,
+      "Historical Fiction": 1,
+      Drama: 1,
+    },
+    topBooks: [
+      { title: "Da Vinci Code", borrows: 15 },
+      { title: "Pride and Prejudice", borrows: 12 },
+      { title: "The Old Man and the Sea", borrows: 10 },
+      { title: "The Chronicles of Narnia", borrows: 9 },
+      { title: "Anna Karenina", borrows: 8 },
+    ],
+    availability: {
+      available: 25,
+      borrowed: 15,
+    },
+    monthlyData: [45, 52, 48, 55, 60, 58],
+    overdueStatus: {
+      "On Time": 85,
+      "Overdue <7d": 8,
+      "Overdue 7-14d": 4,
+      "Overdue >14d": 3,
+    },
+  };
+
+  const initChart = (id, config) => {
+    return new Chart(document.getElementById(id), {
+      ...config,
+      options: {
+        ...config.options,
+        maintainAspectRatio: false,
+        responsive: false,
+      },
+    });
+  };
+
+  initChart("genreChart", {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(libraryStats.genres),
+      datasets: [
+        {
+          data: Object.values(libraryStats.genres),
+          backgroundColor: [
+            "#4e73df",
+            "#1cc88a",
+            "#36b9cc",
+            "#f6c23e",
+            "#e74a3b",
+            "#858796",
+            "#6f42c1",
+          ],
+        },
+      ],
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw}` } },
+      },
+    },
+  });
+
+  initChart("topBooksChart", {
+    type: "bar",
+    data: {
+      labels: libraryStats.topBooks.map((b) => b.title),
+      datasets: [
+        {
+          data: libraryStats.topBooks.map((b) => b.borrows),
+          backgroundColor: "#4e73df",
+        },
+      ],
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 5 } },
+        x: { grid: { display: false } },
+      },
+      plugins: { legend: { display: false } },
+    },
+  });
+
+  initChart("availabilityChart", {
+    type: "pie",
+    data: {
+      labels: ["Available", "Borrowed"],
+      datasets: [
+        {
+          data: [
+            libraryStats.availability.available,
+            libraryStats.availability.borrowed,
+          ],
+          backgroundColor: ["#1cc88a", "#e74a3b"],
+        },
+      ],
+    },
+    options: {
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: {
+          callbacks: {
+            label: (ctx) =>
+              `${ctx.label}: ${ctx.raw} (${Math.round((ctx.raw / 40) * 100)}%)`,
+          },
+        },
+      },
+    },
+  });
+
+  initChart("monthlyTrendChart", {
+    type: "line",
+    data: {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      datasets: [
+        {
+          label: "Borrows",
+          data: libraryStats.monthlyData,
+          borderColor: "#4e73df",
+          backgroundColor: "rgba(78, 115, 223, 0.05)",
+          fill: true,
+          tension: 0.3,
+        },
+      ],
+    },
+    options: {
+      scales: { y: { beginAtZero: false } },
+      plugins: { legend: { display: false } },
+    },
+  });
+
+  initChart("overdueChart", {
+    type: "polarArea",
+    data: {
+      labels: Object.keys(libraryStats.overdueStatus),
+      datasets: [
+        {
+          data: Object.values(libraryStats.overdueStatus),
+          backgroundColor: ["#1cc88a", "#f6c23e", "#e74a3b", "#858796"],
+        },
+      ],
+    },
+    options: {
+      scales: { r: { display: false } },
+      plugins: { legend: { position: "bottom" } },
+    },
+  });
+</script>

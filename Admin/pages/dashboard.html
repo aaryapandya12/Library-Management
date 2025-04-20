@@ -1,0 +1,132 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-home me-2"></i> Admin Dashboard</h2>
+      <p class="text-muted mb-0">Welcome back!</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/total_books.html')"
+      >
+        <div class="card card-hover">
+          <div class="card-body text-center">
+            <div
+              class="bg-primary bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
+              <i class="fas fa-book text-primary fa-2x"></i>
+            </div>
+            <h3 class="mb-1" id="totalBooksCount">0</h3>
+            <p class="text-muted mb-0">Total Books</p>
+            <small class="text-primary">In Collection</small>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/registered_members.html')"
+      >
+        <div class="card card-hover">
+          <div class="card-body text-center">
+            <div
+              class="bg-success bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
+              <i class="fas fa-user-plus text-success fa-2x"></i>
+            </div>
+            <h3 class="mb-1" id="totalMembersCount">0</h3>
+            <p class="text-muted mb-0">Total Members</p>
+            <small class="text-success">Registered</small>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/books_issued.html')"
+      >
+        <div class="card card-hover">
+          <div class="card-body text-center">
+            <div
+              class="bg-info bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
+              <i class="fas fa-exchange-alt text-info fa-2x"></i>
+            </div>
+            <h3 class="mb-1" id="totalTransactionsCount">0</h3>
+            <p class="text-muted mb-0">Total Transactions</p>
+            <small class="text-info">All Time</small>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/books_issued.html')"
+      >
+        <div class="card card-hover">
+          <div class="card-body text-center">
+            <div
+              class="bg-danger bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
+              <i class="fas fa-exclamation text-danger fa-2x"></i>
+            </div>
+            <h3 class="mb-1" id="totalOverduesCount">0</h3>
+            <p class="text-muted mb-0">Total Overdues</p>
+            <small class="text-danger">Pending</small>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function updateDashboardCounts(data) {
+      const totalBooks = data.books.length;
+      document.getElementById("totalBooksCount").textContent = totalBooks;
+
+      const totalMembers = data.users.filter(
+        (user) => user.UserType === "user"
+      ).length;
+      document.getElementById("totalMembersCount").textContent = totalMembers;
+
+      const totalTransactions = data.borrowRecords.length;
+      document.getElementById("totalTransactionsCount").textContent =
+        totalTransactions;
+
+      const today = new Date().toISOString().split("T")[0];
+      const totalOverdues = data.borrowRecords.filter(
+        (record) => record.Status === "borrowed" && record.DueDate < today
+      ).length;
+      document.getElementById("totalOverduesCount").textContent = totalOverdues;
+    }
+
+    async function fetchDataAndUpdate() {
+      try {
+        const response = await fetch("json/db.json");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        updateDashboardCounts(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    fetchDataAndUpdate();
+  </script>
+</div>
