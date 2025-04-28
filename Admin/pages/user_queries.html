@@ -112,13 +112,18 @@
 
 <script>
   function fetchQueries() {
-    fetch("http://localhost:3000/queries")
+    fetch("http://localhost:8080/api/queries")
       .then((response) => response.json())
       .then((queries) => {
-        fetch("http://localhost:3000/users")
+        fetch("http://localhost:8080/api/users")
           .then((response) => response.json())
           .then((users) => {
-            displayQueries(queries, users);
+            const userUsers = users.filter((user) => user.userType === "user");
+
+            const userQueries = queries.filter((query) =>
+              userUsers.some((user) => user.userID == query.userID)
+            );
+            displayQueries(userQueries, userUsers);
           })
           .catch((error) => {
             console.error("Error fetching users:", error);
@@ -134,35 +139,35 @@
     tableBody.innerHTML = "";
 
     queries.forEach((query) => {
-      const user = users.find((u) => u.UserID == query.UserID) || {
+      const user = users.find((u) => u.userID == query.userID) || {
         Name: "Unknown User",
         Email: "",
       };
 
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${query.QueryID}</td>
+        <td>${query.queryID}</td>
         <td>
           <div class="d-flex align-items-center">
-            <span>${user.Name}</span>
+            <span>${user.name}</span>
           </div>
         </td>
-        <td>${query.Subject}</td>
-        <td>${query.Date}</td>
-        <td><span class="badge ${getStatusBadgeClass(query.Status)}">${
-        query.Status
+        <td>${query.subject}</td>
+        <td>${query.date}</td>
+        <td><span class="badge ${getStatusBadgeClass(query.status)}">${
+        query.status
       }</span></td>
         <td>
           <button
             class="btn btn-sm btn-outline-primary me-1"
             data-bs-toggle="modal"
             data-bs-target="#queryDetailModal"
-            onclick="showQueryDetails('${query.id}')"
+            onclick="showQueryDetails('${query.queryID}')"
           >
             <i class="fas fa-eye"></i>
           </button>
           <button class="btn btn-sm btn-outline-success" onclick="resolveQuery('${
-            query.id
+            query.queryID
           }')">
             <i class="fas fa-check"></i>
           </button>
@@ -186,14 +191,14 @@
   }
 
   function showQueryDetails(queryId) {
-    fetch(`http://localhost:3000/queries/${queryId}`)
+    fetch(`http://localhost:8080/api/queries/${queryId}`)
       .then((response) => response.json())
       .then((query) => {
-        document.getElementById("querySubject").textContent = query.Subject;
+        document.getElementById("querySubject").textContent = query.subject;
         document.getElementById("queryMessage").innerHTML =
-          query.Message.replace(/\n/g, "<br>");
+          query.message.replace(/\n/g, "<br>");
         document.getElementById("adminResponseTextarea").value =
-          query.AdminResponse;
+          query.adminResponse;
         document
           .getElementById("adminResponseTextarea")
           .setAttribute("data-query-id", queryId);

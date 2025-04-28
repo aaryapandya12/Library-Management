@@ -11,8 +11,9 @@
           style="width: 200px"
         >
           <option value="all">All Status</option>
-          <option value="returned">Returned</option>
+          <option value="pending">Pending</option>
           <option value="borrowed">Borrowed</option>
+          <option value="returned">Returned</option>
         </select>
       </div>
 
@@ -49,9 +50,9 @@
 </div>
 
 <script>
-  const borrowRecordsApiUrl = "http://localhost:3000/borrowRecords";
-  const booksApiUrl = "http://localhost:3000/books";
-  const usersApiUrl = "http://localhost:3000/users";
+  const borrowRecordsApiUrl = "http://localhost:8080/api/borrowRecords";
+  const booksApiUrl = "http://localhost:8080/api/books";
+  const usersApiUrl = "http://localhost:8080/api/users";
 
   let allRecords = [];
   let sortDirection = 1;
@@ -127,36 +128,39 @@
     });
   }
 
-  function getBookTitle(bookId) {
-    const book = window.booksData.find(
-      (b) => b.BookID == bookId || b.id == bookId
-    );
-    return book ? book.Title : "Unknown Book";
-  }
+function getBookTitle(bookId) {
+  if (!window.booksData) return "Unknown Book";
+  const book = window.booksData.find(
+    (b) => b.bookID == bookId || b.id == bookId
+  );
+  return book ? (book.title || book.Title || "Unknown Book") : "Unknown Book";
+}
 
   function getUserName(userId) {
-    const user = window.usersData.find(
-      (u) => u.UserID == userId || u.id == userId
-    );
-    return user ? user.Name : "Unknown User";
-  }
+  if (!window.usersData) return "Unknown User";
+  const user = window.usersData.find(
+    (u) => u.userID == userId || u.id == userId
+  );
+  return user ? (user.name || "Unknown User") : "Unknown User";
+}
 
   function renderIssuedBooks() {
     const statusFilterValue = statusFilter.value;
     const searchTerm = searchInput.value.toLowerCase();
 
     let filteredRecords = allRecords.filter((record) => {
+      const recordStatus = record.status ? record.status.toLowerCase() : "";
       const matchesStatus =
         statusFilterValue === "all" ||
-        record.Status.toLowerCase() === statusFilterValue;
+        recordStatus === statusFilterValue.toLowerCase();
 
-      const bookTitle = getBookTitle(record.BookID).toLowerCase();
-      const userName = getUserName(record.UserID).toLowerCase();
+      const bookTitle = getBookTitle(record.bookID).toLowerCase();
+      const userName = getUserName(record.userID).toLowerCase();
 
       const matchesSearch =
         bookTitle.includes(searchTerm) ||
         userName.includes(searchTerm) ||
-        record.RecordID.toString().includes(searchTerm);
+        (record.recordID && record.recordID.toString().includes(searchTerm));
 
       return matchesStatus && matchesSearch;
     });
@@ -167,21 +171,21 @@
 
         switch (currentSortColumn) {
           case "title":
-            aValue = getBookTitle(a.BookID);
-            bValue = getBookTitle(b.BookID);
+            aValue = getBookTitle(a.bookID);
+            bValue = getBookTitle(b.bookID);
             return aValue.localeCompare(bValue) * sortDirection;
           case "borrower":
-            aValue = getUserName(a.UserID);
-            bValue = getUserName(b.UserID);
+            aValue = getUserName(a.userID);
+            bValue = getUserName(b.userID);
             return aValue.localeCompare(bValue) * sortDirection;
           case "borrowDate":
             return (
-              (new Date(a.BorrowDate) - new Date(b.BorrowDate)) * sortDirection
+              (new Date(a.borrowDate) - new Date(b.borrowDate)) * sortDirection
             );
           case "dueDate":
-            return (new Date(a.DueDate) - new Date(b.DueDate)) * sortDirection;
+            return (new Date(a.dueDate) - new Date(b.dueDate)) * sortDirection;
           case "status":
-            return a.Status.localeCompare(b.Status) * sortDirection;
+            return a.status.localeCompare(b.status) * sortDirection;
           default:
             return 0;
         }
@@ -192,30 +196,34 @@
       .map(
         (record) => `
       <tr>
-        <td class="ps-4">${record.RecordID}</td>
-        <td>${getBookTitle(record.BookID)}</td>
-        <td>${getUserName(record.UserID)}</td>
-        <td>${formatDate(record.BorrowDate)}</td>
-        <td>${formatDate(record.DueDate)}</td>
+        <td class="ps-4">${record.recordID}</td>
+        <td>${getBookTitle(record.bookID)}</td>
+        <td>${getUserName(record.userID)}</td>
+        <td>${formatDate(record.borrowDate)}</td>
+        <td>${formatDate(record.dueDate)}</td>
         <td>
           <span class="badge ${
-            record.Status === "returned" ? "bg-success" : "bg-warning text-dark"
+            record.status === "returned"
+              ? "bg-success"
+              : record.status === "borrowed"
+              ? "bg-warning text-dark"
+              : "bg-danger text-white"
           }">
-            ${record.Status}
+            ${record.status}
           </span>
         </td>
         <td class="pe-4 text-end">
           ${
-            record.Status === "borrowed"
+            record.status === "borrowed"
               ? `
-            <button class="btn btn-sm btn-outline-success me-2 return-btn" data-id="${record.RecordID}">
+            <button class="btn btn-sm btn-outline-success me-2 return-btn" data-id="${record.recordID}">
               <i class="bi bi-check-circle me-1"></i>Mark Returned
             </button>
           `
               : ""
           }
           <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${
-            record.RecordID
+            record.recordID
           }">
             <i class="bi bi-trash me-1"></i>Delete
           </button>
@@ -243,47 +251,46 @@
       day: "numeric",
     });
   }
+function markAsReturned(recordId) {
+  if (confirm("Are you sure you want to mark this book as returned?")) {
+    const record = allRecords.find((r) => r.recordID == recordId);
+    if (!record) return;
 
-  function markAsReturned(recordId) {
-    if (confirm("Are you sure you want to mark this book as returned?")) {
-      const record = allRecords.find((r) => r.RecordID == recordId);
-      if (!record) return;
-
-      fetch(`${borrowRecordsApiUrl}/${recordId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          Status: "returned",
-          ReturnDate: new Date().toISOString().split("T")[0],
-        }),
+    fetch(`${borrowRecordsApiUrl}/${recordId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        Status: "returned",
+        ReturnDate: new Date().toISOString().split("T")[0],
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Update failed");
+        return fetchBorrowRecords();
       })
-        .then((res) => {
-          if (!res.ok) throw new Error("Update failed");
-          return fetchBorrowRecords();
-        })
-        .then(() => {
-          renderIssuedBooks();
-          showAlert("Book marked as returned successfully", "success");
+      .then(() => {
+        renderIssuedBooks();
+        showAlert("Book marked as returned successfully", "success");
 
-          const book = window.booksData.find(
-            (b) => b.BookID == record.BookID || b.id == record.BookID
-          );
-          if (book) {
-            fetch(`${booksApiUrl}/${book.id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                AvailableCopies: parseInt(book.AvailableCopies) + 1,
-              }),
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error updating record:", error);
-          showAlert("Failed to update record", "danger");
-        });
-    }
+        const book = window.booksData.find(
+          (b) => b.bookID == record.bookID || b.id == record.bookID
+        );
+        if (book) {
+          fetch(`${booksApiUrl}/${book.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              AvailableCopies: parseInt(book.AvailableCopies) + 1,
+            }),
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating record:", error);
+        showAlert("Failed to update record", "danger");
+      });
   }
+}
 
   function deleteRecord(recordId) {
     if (confirm("Are you sure you want to delete this record?")) {

@@ -410,13 +410,15 @@
         UserType: userTypeSelect.value,
       };
 
-      fetch(`http://localhost:3000/users?Email=${encodeURIComponent(email)}`)
+      fetch(
+        `http://localhost:8080/api/users?Email=${encodeURIComponent(email)}`
+      )
         .then((res) => res.json())
         .then((users) => {
-          if (users.length > 0) {
+          if (users.includes()) {
             alert("User already exists");
           } else {
-            fetch("http://localhost:3000/users", {
+            fetch("http://localhost:8080/api/users", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -440,4 +442,3 @@
     });
   });
 </script>
-

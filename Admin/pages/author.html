@@ -101,7 +101,7 @@
 </div>
 
 <script>
-  const apiUrl = "http://localhost:3000/authors";
+  const apiUrl = "http://localhost:8080/api/authors";
   let allAuthors = [];
   let editId = null;
   let sortDirection = 1;
@@ -126,7 +126,7 @@
     searchInput.addEventListener("input", () => {
       const searchTerm = searchInput.value.toLowerCase();
       const filtered = allAuthors.filter((author) =>
-        author.AuthorName.toLowerCase().includes(searchTerm)
+        author.authorName.toLowerCase().includes(searchTerm)
       );
       renderAuthors(filtered);
     });
@@ -139,7 +139,7 @@
 
     sortableHeader.addEventListener("click", () => {
       const sorted = [...allAuthors].sort(
-        (a, b) => a.AuthorName.localeCompare(b.AuthorName) * sortDirection
+        (a, b) => a.authorName.localeCompare(b.authorName) * sortDirection
       );
       sortDirection *= -1;
       renderAuthors(sorted);
@@ -198,8 +198,8 @@
         (author) => `
       <tr>
         <td class="ps-4">${author.id}</td>
-        <td>${author.AuthorName}</td>
-        <td>${author.Bio}</td>
+        <td>${author.authorName}</td>
+        <td>${author.bio}</td>
         <td class="pe-4 text-end">
           <button class="btn btn-sm btn-outline-primary me-2 edit-btn" data-id="${author.id}">
             <i class="bi bi-pencil-square me-1"></i>Edit
@@ -235,8 +235,8 @@
         return res.json();
       })
       .then((data) => {
-        names.value = data.AuthorName;
-        bio.value = data.Bio;
+        names.value = data.authorName;
+        bio.value = data.bio;
         editId = id;
         submitBtn.innerHTML = `<i class="bi bi-pencil-square me-2"></i>Update Author`;
         document.getElementById("authorModalLabel").textContent = "Edit Author";
@@ -267,8 +267,8 @@
     if (!validateForm()) return;
 
     const author = {
-      AuthorName: names.value.trim(),
-      Bio: bio.value.trim(),
+      authorName: names.value.trim(),
+      bio: bio.value.trim(),
     };
 
     const method = editId ? "PUT" : "POST";

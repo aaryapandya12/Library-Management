@@ -80,8 +80,8 @@
 />
 
 <script>
-  const BOOKS_API = "http://localhost:3000/books";
-  const AUTHORS_API = "http://localhost:3000/authors";
+  const BOOKS_API = "http://localhost:8080/api/books";
+  const AUTHORS_API = "http://localhost:8080/api/authors";
 
   let libraryData = {
     authors: [],
@@ -121,30 +121,30 @@
 
   function getBadgeColor(genre) {
     const colorMap = {
-      'Fiction': 'primary',
-      'Thriller': 'danger',
-      'Romance': 'warning',
-      'Adventure': 'dark',
-      'Fantasy': 'purple',
-      'Historical Fiction': 'brown',
-      'Drama': 'indigo',
-      'Non-fiction': 'info',
-      'Science & Technology': 'success',
-      'Biographies': 'secondary',
-      'History': 'dark',
-      'Self-help': 'success'
+      Fiction: "primary",
+      Thriller: "danger",
+      Romance: "warning",
+      Adventure: "dark",
+      Fantasy: "purple",
+      "Historical Fiction": "brown",
+      Drama: "indigo",
+      "Non-fiction": "info",
+      "Science & Technology": "success",
+      Biographies: "secondary",
+      History: "dark",
+      "Self-help": "success",
     };
-    return colorMap[genre] || 'secondary';
+    return colorMap[genre] || "secondary";
   }
 
-  function renderBooks(filter = 'all') {
+  function renderBooks(filter = "all") {
     const booksContainer = document.getElementById("books-container");
     booksContainer.innerHTML = "";
 
     let filteredBooks = libraryData.books;
-    
-    if (filter !== 'all') {
-      filteredBooks = filteredBooks.filter(book => book.Genre === filter);
+
+    if (filter !== "all") {
+      filteredBooks = filteredBooks.filter((book) => book.genre === filter);
     }
 
     if (filteredBooks.length === 0) {
@@ -158,35 +158,35 @@
     }
 
     filteredBooks.forEach((book) => {
-      const author = getAuthorById(book.AuthorID);
-      const badgeColor = getBadgeColor(book.Genre);
+      const author = getAuthorById(book.authorID);
+      const badgeColor = getBadgeColor(book.genre);
 
       const bookCard = document.createElement("div");
       bookCard.className = "col";
       bookCard.innerHTML = `
       <div class="card h-100 border-0 shadow-sm book-card">
         <div class="card-body p-3">
-          <h5 class="card-title mb-1">${book.Title}</h5>
+          <h5 class="card-title mb-1">${book.title}</h5>
           <p class="text-muted small mb-2">by ${
-            author ? author.AuthorName : "Unknown Author"
+            author ? author.authorName : "Unknown Author"
           }</p>
           <div class="d-flex gap-2 mb-3">
             <span class="badge bg-${badgeColor} bg-opacity-10 text-${badgeColor}">
-              ${book.Genre}
+              ${book.genre}
             </span>
           </div>
           <p class="card-text small text-muted mb-0">
-            ${book.Description || "No description available."}
+            ${book.description || "No description available."}
           </p>
         </div>
         <div class="card-footer bg-transparent border-0 p-3 pt-0">
           <button class="btn btn-primary btn-sm w-100" onclick="borrowBook(${
-            book.BookID
+            book.bookID
           })">
             <i class="bi bi-bookmark-plus me-1"></i>Borrow
           </button>
           <button class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="saveBook(${
-            book.BookID
+            book.bookID
           })">
             <i class="bi bi-bookmark-heart me-1"></i>Save for Later
           </button>
@@ -198,24 +198,58 @@
   }
 
   function setupEventListeners() {
-    document.getElementById('categoryFilter').addEventListener('change', (e) => {
-      renderBooks(e.target.value);
-    });
+    document
+      .getElementById("categoryFilter")
+      .addEventListener("change", (e) => {
+        renderBooks(e.target.value);
+      });
   }
 
-  function borrowBook(bookId) {
-    const book = libraryData.books.find((b) => b.BookID === bookId);
-    if (book && book.AvailableCopies > 0) {
-      alert(`You have borrowed "${book.Title}". Enjoy your reading!`);
-    } else {
-      alert("Sorry, this book is currently not available for borrowing.");
+  async function borrowBook(bookId) {
+    try {
+      const bookIndex = libraryData.books.findIndex((b) => b.bookID === bookId);
+      if (bookIndex !== -1) {
+        const book = libraryData.books[bookIndex];
+
+        if (book.availableCopies <= 0) {
+          alert("Sorry, this book is currently not available for borrowing.");
+          return;
+        }
+
+        const updatedBook = {
+          ...book,
+          availableCopies: book.availableCopies - 1,
+        };
+
+        const response = await fetch(`${BOOKS_API}/${bookId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedBook),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update book");
+        }
+
+        libraryData.books[bookIndex] = updatedBook;
+
+        const currentFilter = document.getElementById("categoryFilter").value;
+        renderBooks(currentFilter);
+
+        alert(`You have borrowed "${book.title}". Enjoy your reading!`);
+      }
+    } catch (error) {
+      console.error("Error borrowing book:", error);
+      alert("Failed to borrow book. Please try again later.");
     }
   }
 
   function saveBook(bookId) {
-    const book = libraryData.books.find((b) => b.BookID === bookId);
+    const book = libraryData.books.find((b) => b.bookID === bookId);
     if (book) {
-      alert(`"${book.Title}" has been added to your saved list.`);
+      alert(`"${book.title}" has been added to your saved list.`);
     }
   }
 

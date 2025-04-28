@@ -270,18 +270,18 @@
         return;
       }
 
-      fetch("http://localhost:3000/users")
+      fetch("http://localhost:8080/api/users")
         .then((response) => response.json())
         .then((users) => {
           const user = users.find(
             (u) =>
-              u.Email === emailInput.value.trim() &&
-              u.Password === passwordInput.value.trim()
+              u.email === emailInput.value.trim() &&
+              u.password === passwordInput.value.trim()
           );
           if (user) {
-            if (user.UserType === "admin") {
+            if (user.userType === "admin") {
               window.location.href = "../index.html";
-            } else if (user.UserType === "user") {
+            } else if (user.userType === "user") {
               window.location.href = "../user.html";
             } else {
               alert("Unknown user type");

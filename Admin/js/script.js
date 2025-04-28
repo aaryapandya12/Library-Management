@@ -51,5 +51,3 @@ document.getElementById("switchRoleBtn").addEventListener("click", function () {
 window.addEventListener("DOMContentLoaded", function () {
   loadPage("pages/dashboard.html");
 });
-
-
