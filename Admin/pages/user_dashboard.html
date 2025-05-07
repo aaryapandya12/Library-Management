@@ -10,20 +10,16 @@
     <div class="col-md-4">
       <select class="form-select shadow-sm" id="categoryFilter">
         <option value="all" selected>All Categories</option>
-        <option value="Fiction">Fiction</option>
-        <option value="Non-fiction">Non-fiction</option>
-        <option value="Science & Technology">Science & Technology</option>
-        <option value="Biographies">Biographies</option>
-        <option value="History">History</option>
-        <option value="Self-help">Self-help</option>
-        <option value="Thriller">Thriller</option>
-        <option value="Romance">Romance</option>
-        <option value="Adventure">Adventure</option>
-        <option value="Fantasy">Fantasy</option>
-        <option value="Historical Fiction">Historical Fiction</option>
-        <option value="Drama">Drama</option>
       </select>
     </div>
+  </div>
+
+  <div class="mb-5">
+    <h3 class="fw-bold mb-4">Recommended For You</h3>
+    <div
+      class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4"
+      id="recommended-books"
+    ></div>
   </div>
 
   <div
@@ -82,6 +78,10 @@
 <script>
   const BOOKS_API = "http://localhost:8080/api/books";
   const AUTHORS_API = "http://localhost:8080/api/authors";
+  const fetchHeaders = {
+    Authorization: getAuthorization(),
+    "Content-Type": "application/json",
+  };
 
   let libraryData = {
     authors: [],
@@ -91,8 +91,8 @@
   async function fetchData() {
     try {
       const [booksResponse, authorsResponse] = await Promise.all([
-        fetch(BOOKS_API),
-        fetch(AUTHORS_API),
+        fetch(BOOKS_API, { headers: fetchHeaders }),
+        fetch(AUTHORS_API, { headers: fetchHeaders }),
       ]);
 
       if (!booksResponse.ok || !authorsResponse.ok) {
@@ -102,6 +102,7 @@
       libraryData.books = await booksResponse.json();
       libraryData.authors = await authorsResponse.json();
 
+      populateGenreFilter();
       renderBooks();
       setupEventListeners();
     } catch (error) {
@@ -117,6 +118,24 @@
 
   function getAuthorById(authorId) {
     return libraryData.authors.find((author) => author.id === authorId);
+  }
+
+  function populateGenreFilter() {
+    const genreFilter = document.getElementById("categoryFilter");
+    const uniqueGenres = [
+      ...new Set(libraryData.books.map((book) => book.genre)),
+    ];
+
+    while (genreFilter.options.length > 1) {
+      genreFilter.remove(1);
+    }
+
+    uniqueGenres.forEach((genre) => {
+      const option = document.createElement("option");
+      option.value = genre;
+      option.textContent = genre;
+      genreFilter.appendChild(option);
+    });
   }
 
   function getBadgeColor(genre) {
@@ -205,51 +224,84 @@
       });
   }
 
-  async function borrowBook(bookId) {
+  function saveBook(bookId) {
     try {
-      const bookIndex = libraryData.books.findIndex((b) => b.bookID === bookId);
-      if (bookIndex !== -1) {
-        const book = libraryData.books[bookIndex];
+      const book = libraryData.books.find((b) => b.bookID === bookId);
+      const author = getAuthorById(book.authorID);
 
-        if (book.availableCopies <= 0) {
-          alert("Sorry, this book is currently not available for borrowing.");
-          return;
-        }
-
-        const updatedBook = {
-          ...book,
-          availableCopies: book.availableCopies - 1,
-        };
-
-        const response = await fetch(`${BOOKS_API}/${bookId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedBook),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to update book");
-        }
-
-        libraryData.books[bookIndex] = updatedBook;
-
-        const currentFilter = document.getElementById("categoryFilter").value;
-        renderBooks(currentFilter);
-
-        alert(`You have borrowed "${book.title}". Enjoy your reading!`);
+      if (!book) {
+        alert("Book not found");
+        return;
       }
+
+      const savedStr = localStorage.getItem("savedBooks");
+      const savedBooks = savedStr ? JSON.parse(savedStr) : [];
+
+      const isAlreadySaved = savedBooks.some((b) => b.bookId === bookId);
+      if (isAlreadySaved) {
+        alert(`"${book.title}" is already saved`);
+        return;
+      }
+
+      savedBooks.push({
+        title: book.title,
+        author: author ? author.authorName : "Unknown",
+        genre: book.genre,
+        bookId: book.bookID,
+        date: new Date().toLocaleDateString(),
+      });
+
+      localStorage.setItem("savedBooks", JSON.stringify(savedBooks));
+      alert(`"${book.title}" has been saved for later`);
+
+      console.log(
+        "Saved books:",
+        JSON.parse(localStorage.getItem("savedBooks"))
+      );
     } catch (error) {
-      console.error("Error borrowing book:", error);
-      alert("Failed to borrow book. Please try again later.");
+      console.error("Error saving book:", error);
+      alert("Failed to save book");
     }
   }
 
-  function saveBook(bookId) {
-    const book = libraryData.books.find((b) => b.bookID === bookId);
-    if (book) {
-      alert(`"${book.title}" has been added to your saved list.`);
+  async function borrowBook(bookId) {
+    try {
+      const book = libraryData.books.find((b) => b.bookID === bookId);
+      const author = getAuthorById(book.authorID);
+
+      if (book.availableCopies <= 0) {
+        alert("Book not available");
+        return;
+      }
+
+      await fetch(`${BOOKS_API}/${bookId}`, {
+        method: "PUT",
+        headers: fetchHeaders,
+        body: JSON.stringify({
+          ...book,
+          availableCopies: book.availableCopies - 1,
+        }),
+      });
+
+      const historyStr = localStorage.getItem("borrowedBooks");
+      const history = historyStr ? JSON.parse(historyStr) : [];
+
+      history.push({
+        title: book.title,
+        author: author ? author.authorName : "Unknown",
+        date: new Date().toLocaleDateString(),
+        bookId: book.bookID,
+      });
+
+      localStorage.setItem("borrowedBooks", JSON.stringify(history));
+
+      alert(`Borrowed "${book.title}"`);
+
+      const currentFilter = document.getElementById("categoryFilter").value;
+      renderBooks(currentFilter);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Couldn't borrow book");
     }
   }
 

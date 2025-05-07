@@ -2,17 +2,23 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h2 class="mb-1"><i class="fas fa-home me-2"></i> Admin Dashboard</h2>
-      <p class="text-muted mb-0">Welcome back!</p>
+      <p class="text-muted mb-0" id="welcome">Welcome back!</p>
     </div>
   </div>
 
- 
   <div class="row mb-4">
     <div class="col-md-3">
-      <a href="#" class="text-decoration-none" onclick="loadPage('pages/total_books.html')">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/total_books.html')"
+      >
         <div class="card card-hover">
           <div class="card-body text-center">
-            <div class="bg-primary bg-opacity-10 rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px">
+            <div
+              class="bg-primary bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
               <i class="fas fa-book text-primary fa-2x"></i>
             </div>
             <h3 class="mb-1" id="totalBooksCount">0</h3>
@@ -23,12 +29,18 @@
       </a>
     </div>
 
-    
     <div class="col-md-3">
-      <a href="#" class="text-decoration-none" onclick="loadPage('pages/registered_members.html')">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/registered_members.html')"
+      >
         <div class="card card-hover">
           <div class="card-body text-center">
-            <div class="bg-success bg-opacity-10 rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px">
+            <div
+              class="bg-success bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
               <i class="fas fa-user-plus text-success fa-2x"></i>
             </div>
             <h3 class="mb-1" id="totalMembersCount">0</h3>
@@ -39,12 +51,18 @@
       </a>
     </div>
 
-   
     <div class="col-md-3">
-      <a href="#" class="text-decoration-none" onclick="loadPage('pages/books_issued.html')">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/books_issued.html')"
+      >
         <div class="card card-hover">
           <div class="card-body text-center">
-            <div class="bg-info bg-opacity-10 rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px">
+            <div
+              class="bg-info bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
               <i class="fas fa-exchange-alt text-info fa-2x"></i>
             </div>
             <h3 class="mb-1" id="totalTransactionsCount">0</h3>
@@ -55,12 +73,18 @@
       </a>
     </div>
 
-   
     <div class="col-md-3">
-      <a href="#" class="text-decoration-none" onclick="loadPage('pages/books_issued.html')">
+      <a
+        href="#"
+        class="text-decoration-none"
+        onclick="loadPage('pages/books_issued.html')"
+      >
         <div class="card card-hover">
           <div class="card-body text-center">
-            <div class="bg-danger bg-opacity-10 rounded-circle p-3 mb-3 mx-auto" style="width: 70px; height: 70px">
+            <div
+              class="bg-danger bg-opacity-10 rounded-circle p-3 mb-3 mx-auto"
+              style="width: 70px; height: 70px"
+            >
               <i class="fas fa-exclamation text-danger fa-2x"></i>
             </div>
             <h3 class="mb-1" id="totalOverduesCount">0</h3>
@@ -72,235 +96,252 @@
     </div>
   </div>
 
- 
-  <div class="row">
-  
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Top Borrowed Books</h6>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-white">
+          <h5 class="card-title mb-0">Recent Members</h5>
         </div>
-        <div class="card-body p-3">
-          <div class="chart-container" style="position: relative; height: 250px;">
-            <canvas id="topBooksChart"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Book Availability</h6>
-        </div>
-        <div class="card-body p-3">
-          <div class="chart-container" style="position: relative; height: 250px;">
-            <canvas id="availabilityChart"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Monthly Borrowing Trend</h6>
-        </div>
-        <div class="card-body p-3">
-          <div class="chart-container" style="position: relative; height: 250px;">
-            <canvas id="monthlyTrendChart"></canvas>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead class="table-blue">
+                <tr>
+                  <th>User ID</th>
+                  <th class="sortable">Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                </tr>
+              </thead>
+              <tbody id="membersTableBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-white p-3">
+          <h6 class="mb-0">Top Borrowed Books</h6>
+        </div>
+        <div class="card-body p-3">
+          <div
+            class="chart-container"
+            style="position: relative; height: 250px"
+          >
+            <canvas id="topBooksChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-white p-3">
+          <h6 class="mb-0">Genre Distribution</h6>
+        </div>
+        <div class="card-body p-3">
+          <div
+            class="chart-container"
+            style="position: relative; height: 250px"
+          >
+            <canvas id="genreDistributionChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/script.js"></script>
   <script>
-    const libraryStats = {
-      topBooks: [
-        { title: "Da Vinci Code", borrows: 15 },
-        { title: "Pride and Prejudice", borrows: 12 },
-        { title: "The Old Man and the Sea", borrows: 10 },
-        { title: "The Chronicles of Narnia", borrows: 9 },
-        { title: "Anna Karenina", borrows: 8 },
-      ],
-      availability: {
-        available: 25,
-        borrowed: 15,
-      },
-      monthlyData: [45, 52, 48, 55, 60, 58],
-    };
-
-    const initChart = (id, config) => {
-      const ctx = document.getElementById(id).getContext('2d');
-      return new Chart(ctx, {
-        ...config,
-        options: {
-          ...config.options,
-          maintainAspectRatio: false,
-          responsive: true,
-        },
-      });
-    };
-
-    document.addEventListener('DOMContentLoaded', function() {
-      initChart("topBooksChart", {
-        type: "bar",
-        data: {
-          labels: libraryStats.topBooks.map((b) => b.title),
-          datasets: [
-            {
-              data: libraryStats.topBooks.map((b) => b.borrows),
-              backgroundColor: "#4e73df",
-              borderColor: "#4e73df",
-              borderWidth: 1
-            },
-          ],
-        },
-        options: {
-          scales: {
-            y: { 
-              beginAtZero: true, 
-              ticks: { stepSize: 5 },
-              grid: {
-                display: true,
-                drawBorder: false
-              }
-            },
-            x: { 
-              grid: { display: false },
-              ticks: {
-                autoSkip: false,
-                maxRotation: 45,
-                minRotation: 45
-              }
-            },
-          },
-          plugins: { 
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#2e364a',
-              titleFont: { size: 14 },
-              bodyFont: { size: 12 },
-              padding: 12,
-              cornerRadius: 4
-            }
-          },
-        },
-      });
-
-      initChart("availabilityChart", {
-        type: "doughnut",
-        data: {
-          labels: ["Available", "Borrowed"],
-          datasets: [
-            {
-              data: [libraryStats.availability.available, libraryStats.availability.borrowed],
-              backgroundColor: ["#1cc88a", "#e74a3b"],
-              borderWidth: 0
-            },
-          ],
-        },
-        options: {
-          plugins: {
-            legend: { 
-              position: "bottom",
-              labels: {
-                padding: 20,
-                usePointStyle: true,
-                pointStyle: 'circle'
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => `${ctx.label}: ${ctx.raw} (${Math.round((ctx.raw / 40) * 100)}%)`,
-              },
-              backgroundColor: '#2e364a',
-              titleFont: { size: 14 },
-              bodyFont: { size: 12 },
-              padding: 12,
-              cornerRadius: 4
-            }
-          },
-          cutout: '70%'
-        },
-      });
-
-      initChart("monthlyTrendChart", {
-        type: "line",
-        data: {
-          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-          datasets: [
-            {
-              label: "Borrows",
-              data: libraryStats.monthlyData,
-              borderColor: "#36b9cc",
-              backgroundColor: "rgba(54, 185, 204, 0.2)",
-              fill: true,
-              tension: 0.3,
-              borderWidth: 2,
-              pointBackgroundColor: "#36b9cc",
-              pointRadius: 4,
-              pointHoverRadius: 6
-            },
-          ],
-        },
-        options: {
-          scales: {
-            y: { 
-              beginAtZero: true,
-              grid: {
-                display: true,
-                drawBorder: false
-              }
-            },
-            x: { 
-              grid: { display: false }
-            },
-          },
-          plugins: { 
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#2e364a',
-              titleFont: { size: 14 },
-              bodyFont: { size: 12 },
-              padding: 12,
-              cornerRadius: 4
-            }
-          },
-        },
-      });
-    });
-
+    document.getElementById(
+      "welcome"
+    ).innerHTML = `<h5>Welcome, ${getUserName()}</h5>`;
     function updateDashboardCounts(data) {
-      const totalBooks = data.books.length;
-      document.getElementById("totalBooksCount").textContent = totalBooks;
+      document.getElementById("totalBooksCount").textContent = data.booksCount;
+      document.getElementById("totalMembersCount").textContent = data.userCount;
+      document.getElementById("totalTransactionsCount").textContent =
+        data.borrowCount;
+      document.getElementById("totalOverduesCount").textContent =
+        data.pendingCount;
+    }
 
-      const totalMembers = data.users.filter((user) => user.UserType === "user").length;
-      document.getElementById("totalMembersCount").textContent = totalMembers;
+    const usersApiUrl = "http://localhost:8080/api/users/show-users";
 
-      const totalTransactions = data.borrowRecords.length;
-      document.getElementById("totalTransactionsCount").textContent = totalTransactions;
+    function fetchUsers() {
+      return fetch(usersApiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthorization(),
+        },
+      })
+        .then((res) => {
+          if (!res.ok) {
+            if (res.status === 401) {
+              logout();
+              throw new Error("Session expired. Please login again.");
+            }
+            throw new Error(`Failed to fetch users. Status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          const allUsers = Array.isArray(data)
+            ? data.filter((user) => user.userType == "user")
+            : [];
+          renderMembers(allUsers.slice(0, 5));
+        })
+        .catch((error) => {
+          console.error("Error fetching users:", error);
+          showAlert(
+            error.message || "Failed to load users. Please try again.",
+            "danger"
+          );
+        });
+    }
 
-      const today = new Date().toISOString().split("T")[0];
-      const totalOverdues = data.borrowRecords.filter(
-        (record) => record.Status === "pending" && record.DueDate < today
-      ).length;
-      document.getElementById("totalOverduesCount").textContent = totalOverdues;
+    function renderMembers(users) {
+      const membersTableBody = document.getElementById("membersTableBody");
+
+      membersTableBody.innerHTML = users
+        .map(
+          (user) => `
+          <tr>
+            <td>${user.userID || "N/A"}</td>
+            <td>${user.name || "N/A"}</td>
+            <td>${user.email || "N/A"}</td>
+            <td>${user.phone || "N/A"}</td>
+           
+          </tr>
+        `
+        )
+        .join("");
     }
 
     async function fetchDataAndUpdate() {
       try {
-        const response = await fetch("http:localhost:8080/api/{data}");
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data = await response.json();
-        updateDashboardCounts(data);
+        const dashboardResponse = await fetch(
+          "http://localhost:8080/api/dashboard",
+          {
+            headers: {
+              Authorization: getAuthorization(),
+            },
+          }
+        );
+        if (!dashboardResponse.ok)
+          throw new Error("Dashboard response was not ok");
+        const dashboardData = await dashboardResponse.json();
+        updateDashboardCounts(dashboardData);
+
+        const topFiveResponse = await fetch(
+          "http://localhost:8080/api/dashboard/topfive",
+          {
+            headers: {
+              Authorization: getAuthorization(),
+            },
+          }
+        );
+        if (!topFiveResponse.ok)
+          throw new Error("Top Five response was not ok");
+        const topFiveData = await topFiveResponse.json();
+        topBooksChart(topFiveData);
+
+        const genreResponse = await fetch(
+          "http://localhost:8080/api/dashboard/genre",
+          {
+            headers: {
+              Authorization: getAuthorization(),
+            },
+          }
+        );
+        if (!genreResponse.ok) throw new Error("Genre response was not ok");
+        const genreData = await genreResponse.json();
+        renderGenreChart(genreData);
+
+        await fetchUsers();
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     }
 
+    function renderGenreChart(genreData) {
+      const ctx = document
+        .getElementById("genreDistributionChart")
+        .getContext("2d");
+
+      new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: genreData.map((item) => item.genre),
+          datasets: [
+            {
+              data: genreData.map((item) => item.count),
+              backgroundColor: [
+                "#FF6384",
+                "#36A2EB",
+                "#FFCE56",
+                "#4BC0C0",
+                "#9966FF",
+                "#FF9F40",
+                "#8AC24A",
+                "#607D8B",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+            },
+          },
+        },
+      });
+    }
+
+    function topBooksChart(data) {
+      const ctxb = document.getElementById("topBooksChart").getContext("2d");
+
+      new Chart(ctxb, {
+        type: "bar",
+        data: {
+          labels: data.map((borrow) => borrow.bookTitle),
+          datasets: [
+            {
+              label: "Borrow Count",
+              data: data.map((borrow) => borrow.borrowCount),
+              backgroundColor: [
+                "#FF6384",
+                "#36A2EB",
+                "#FFCE56",
+                "#4BC0C0",
+                "#9966FF",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0,
+              },
+            },
+          },
+        },
+      });
+    }
+
     fetchDataAndUpdate();
   </script>
-
 </div>

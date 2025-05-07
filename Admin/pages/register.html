@@ -295,8 +295,8 @@
     <div class="form-group">
       <label for="usertype">User Type</label>
       <select id="usertype" class="form-control" required>
-        <option value="user">User</option>
-        <option value="admin">Admin</option>
+        <option value="user">USER</option>
+        <option value="admin">ADMIN</option>
       </select>
     </div>
 
@@ -304,11 +304,14 @@
       <button type="submit" class="btn">Register</button>
     </div>
   </form>
+  <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
 
   <div class="register-footer">
-    Already have an account? <a href="login.html">Login here</a>
+    Already have an account? <a href="../login-copy.html">Login here</a>
   </div>
 </div>
+
+<script src="js/script.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -319,6 +322,7 @@
     const confirmPassInput = document.getElementById("confirm-password");
     const mobileInput = document.getElementById("phone");
     const userTypeSelect = document.getElementById("usertype");
+    const errorMessageDiv = document.getElementById("errorMessage");
 
     const showError = (input, message) => {
       let errorDiv = input.nextElementSibling;
@@ -403,41 +407,44 @@
 
       const email = emailInput.value.trim();
       const newUser = {
-        Name: nameInput.value.trim(),
-        Email: email,
-        Password: passInput.value.trim(),
-        Mobile: mobileInput.value.trim(),
-        UserType: userTypeSelect.value,
+        name: nameInput.value.trim(),
+        email: email,
+        password: passInput.value.trim(),
+        phone: mobileInput.value.trim(),
+        userType: userTypeSelect.value,
       };
 
-      fetch(
-        `http://localhost:8080/api/users?Email=${encodeURIComponent(email)}`
-      )
-        .then((res) => res.json())
-        .then((users) => {
-          if (users.includes()) {
-            alert("User already exists");
-          } else {
-            fetch("http://localhost:8080/api/users", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(newUser),
-            })
-              .then((res) => res.json())
-              .then((addedUser) => {
-                window.location.href = "login.html";
-              })
-              .catch((err) => {
-                console.error("Error creating user:", err);
-                alert("Failed to register user.");
-              });
+      fetch("http://localhost:8080/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newUser),
+      })
+        .then((response) => {
+          if (response.status === 409) {
+            errorMessageDiv.textContent = "Email Already Exists";
+            errorMessageDiv.classList.remove("d-none");
+            emailInput.classList.add("is-invalid");
+            throw new Error("Email already exists");
           }
+          if (!response.ok) {
+            throw new Error("Registration failed");
+          }
+          return response.json();
         })
-        .catch((err) => {
-          console.error("Error checking user:", err);
-          alert("Failed to check user existence.");
+        .then((data) => {
+          console.log("Success:", data);
+
+          window.location.href = "../login-copy.html";
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          if (!errorMessageDiv.textContent) {
+            errorMessageDiv.textContent =
+              "Registration failed: " + error.message;
+            errorMessageDiv.classList.remove("d-none");
+          }
         });
     });
   });

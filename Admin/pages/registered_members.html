@@ -26,7 +26,7 @@
 
     <div class="table-responsive">
       <table class="table table-striped table-hover">
-        <thead class="table-dark">
+        <thead class="table-white">
           <tr>
             <th>User ID</th>
             <th class="sortable">Name <i class="fa fa-sort ms-1"></i></th>
@@ -122,7 +122,7 @@
 >
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header bg-info text-white">
+      <div class="modal-header bg-black text-white">
         <h5 class="modal-title" id="viewDetailsModalLabel">Member Details</h5>
         <button
           type="button"
@@ -158,7 +158,7 @@
             <h5>Borrowing History</h5>
             <div class="table-responsive">
               <table class="table table-bordered">
-                <thead>
+                <thead class="table-white">
                   <tr>
                     <th>Book</th>
                     <th>Borrow Date</th>
@@ -166,24 +166,6 @@
                   </tr>
                 </thead>
                 <tbody id="borrowHistoryBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-12">
-            <h5>Recent Queries</h5>
-            <div class="table-responsive">
-              <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Subject</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="queriesBody"></tbody>
               </table>
             </div>
           </div>
@@ -196,167 +178,190 @@
       </div>
     </div>
   </div>
-</div>
 
-<script>
-  const usersApiUrl = "http://localhost:8080/api/users";
-  const booksApiUrl = "http://localhost:8080/api/books";
-  const borrowApiUrl = "http://localhost:8080/api/borrowRecords";
-  const queriesApiUrl = "http://localhost:8080/api/queries";
+  <script src="../js/script.js"></script>
 
-  let allUsers = [];
-  let allBooks = [];
-  let allBorrowRecords = [];
-  let allQueries = [];
+  <script>
+    const usersApiUrl3 = "http://localhost:8080/api/users";
+    const booksApiUrl = "http://localhost:8080/api/books";
+    const borrowApiUrl = "http://localhost:8080/api/borrowRecords";
+    const queriesApiUrl = "http://localhost:8080/api/queries";
 
-  let editId = null;
-  let sortDirection = 1;
+    let allUsers = [];
+    let allBooks = [];
+    let allBorrowRecords = [];
+    let allQueries = [];
 
-  const memberForm = document.getElementById("memberForm");
-  const memberName = document.getElementById("memberName");
-  const memberEmail = document.getElementById("memberEmail");
-  const memberPhone = document.getElementById("memberPhone");
-  const submitMemberBtn = document.getElementById("submitMemberBtn");
-  const searchInput = document.getElementById("searchInput");
-  const membersTableBody = document.getElementById("membersTableBody");
-  const sortableHeader = document.querySelector(".sortable");
+    let editId = null;
+    let sortDirection = 1;
 
-  Promise.all([
-    fetchUsers(),
-    fetchBooks(),
-    fetchBorrowRecords(),
-    fetchQueries(),
-  ]).then(() => {
-    renderMembers(allUsers);
-    setupEventListeners();
-  });
+    const memberForm = document.getElementById("memberForm");
+    const memberName = document.getElementById("memberName");
+    const memberEmail = document.getElementById("memberEmail");
+    const memberPhone = document.getElementById("memberPhone");
+    const submitMemberBtn = document.getElementById("submitMemberBtn");
+    const searchInput = document.getElementById("searchInput");
+    const membersTableBody = document.getElementById("membersTableBody");
+    const sortableHeader = document.querySelector(".sortable");
 
-  function fetchUsers() {
-    return fetch(usersApiUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch users");
-        return res.json();
-      })
-      .then((data) => {
-        allUsers = Array.isArray(data)
-          ? data.filter((user) => user.userType === "user")
-          : [];
-      })
-      .catch((error) => {
-        console.error("Error fetching users:", error);
-        showAlert("Failed to load users. Please try again.", "danger");
-      });
-  }
-
-  function fetchBooks() {
-    return fetch(booksApiUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch books");
-        return res.json();
-      })
-      .then((data) => {
-        allBooks = Array.isArray(data) ? data : [];
-      })
-      .catch((error) => {
-        console.error("Error fetching books:", error);
-      });
-  }
-
-  function fetchBorrowRecords() {
-    return fetch(borrowApiUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch borrow records");
-        return res.json();
-      })
-      .then((data) => {
-        allBorrowRecords = Array.isArray(data) ? data : [];
-      })
-      .catch((error) => {
-        console.error("Error fetching borrow records:", error);
-      });
-  }
-
-  function fetchQueries() {
-    return fetch(queriesApiUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch queries");
-        return res.json();
-      })
-      .then((data) => {
-        allQueries = Array.isArray(data) ? data : [];
-      })
-      .catch((error) => {
-        console.error("Error fetching queries:", error);
-      });
-  }
-
-  function setupEventListeners() {
-    submitMemberBtn.addEventListener("click", handleMemberSubmit);
-
-    searchInput.addEventListener("input", () => {
-      const searchTerm = searchInput.value.toLowerCase();
-      const filtered = allUsers.filter(
-        (user) =>
-          (user.name && user.name.toLowerCase().includes(searchTerm)) ||
-          (user.email && user.email.toLowerCase().includes(searchTerm)) ||
-          (user.phone && user.phone.includes(searchTerm))
-      );
-      renderMembers(filtered);
+    Promise.all([fetchUsers(), fetchBooks(), fetchBorrowRecords()]).then(() => {
+      renderMembers(allUsers);
+      setupEventListeners();
     });
 
-    [memberName, memberEmail, memberPhone].forEach((input) => {
-      input.addEventListener("blur", () => validateMemberField(input));
-    });
-
-    sortableHeader?.addEventListener("click", () => {
-      const sorted = [...allUsers].sort(
-        (a, b) => (a.name || "").localeCompare(b.name || "") * sortDirection
-      );
-      sortDirection *= -1;
-      renderMembers(sorted);
-    });
-  }
-
-  function validateMemberField(input) {
-    let isValid = true;
-
-    if (input.id === "memberEmail") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      isValid = emailRegex.test(input.value.trim());
-    } else if (input.id === "memberPhone") {
-      const phoneRegex = /^[0-9]{10,15}$/;
-      isValid = phoneRegex.test(input.value.trim());
-    } else {
-      isValid = input.value.trim().length >= (input.minLength || 2);
+    function fetchUsers() {
+      return fetch(usersApiUrl3, {
+        headers: {
+          Authorization: getAuthorization(),
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch users");
+          return res.json();
+        })
+        .then((data) => {
+          allUsers = Array.isArray(data)
+            ? data.filter((user) => user.userType === "user")
+            : [];
+        })
+        .catch((error) => {
+          console.error("Error fetching users:", error);
+          showAlert("Failed to load users. Please try again.", "danger");
+        });
     }
 
-    input.classList.toggle("is-invalid", !isValid);
-    input.classList.toggle("is-valid", isValid);
-    return isValid;
-  }
+    function fetchBooks() {
+      return fetch(booksApiUrl, {
+        headers: {
+          Authorization: getAuthorization(),
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch books");
+          return res.json();
+        })
+        .then((data) => {
+          allBooks = Array.isArray(data) ? data : [];
+        })
+        .catch((error) => {
+          console.error("Error fetching books:", error);
+        });
+    }
 
-  function validateMemberForm() {
-    let isValid = true;
+    function fetchBorrowRecords() {
+      return fetch(borrowApiUrl, {
+        headers: {
+          Authorization: getAuthorization(),
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch borrow records");
+          return res.json();
+        })
+        .then((data) => {
+          allBorrowRecords = Array.isArray(data) ? data : [];
+        })
+        .catch((error) => {
+          console.error("Error fetching borrow records:", error);
+        });
+    }
 
-    [memberName, memberEmail, memberPhone].forEach((field) => {
-      if (!validateMemberField(field)) {
-        isValid = false;
+    function fetchQueries() {
+      return fetch(queriesApiUrl, {
+        headers: {
+          Authorization: getAuthorization(),
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch queries");
+          return res.json();
+        })
+        .then((data) => {
+          allQueries = Array.isArray(data) ? data : [];
+        })
+        .catch((error) => {
+          console.error("Error fetching queries:", error);
+        });
+    }
+
+    function setupEventListeners() {
+      submitMemberBtn.addEventListener("click", handleMemberSubmit);
+
+      searchInput.addEventListener("input", () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filtered = allUsers.filter(
+          (user) =>
+            (user.name && user.name.toLowerCase().includes(searchTerm)) ||
+            (user.email && user.email.toLowerCase().includes(searchTerm)) ||
+            (user.phone && user.phone.includes(searchTerm))
+        );
+        renderMembers(filtered);
+      });
+
+      [memberName, memberEmail, memberPhone].forEach((input) => {
+        input.addEventListener("blur", () => validateMemberField(input));
+      });
+
+      sortableHeader?.addEventListener("click", () => {
+        const sorted = [...allUsers].sort(
+          (a, b) => (a.name || "").localeCompare(b.name || "") * sortDirection
+        );
+        sortDirection *= -1;
+        renderMembers(sorted);
+      });
+    }
+
+    function validateMemberField(input) {
+      let isValid = true;
+
+      if (input.id === "memberEmail") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        isValid = emailRegex.test(input.value.trim());
+      } else if (input.id === "memberPhone") {
+        const phoneRegex = /^[0-9]{10,15}$/;
+        isValid = phoneRegex.test(input.value.trim());
+      } else {
+        isValid = input.value.trim().length >= (input.minLength || 2);
       }
-    });
 
-    return isValid;
-  }
+      input.classList.toggle("is-invalid", !isValid);
+      input.classList.toggle("is-valid", isValid);
+      return isValid;
+    }
 
-  function clearMemberValidation() {
-    [memberName, memberEmail, memberPhone].forEach((field) => {
-      field.classList.remove("is-invalid", "is-valid");
-    });
-  }
+    function validateMemberForm() {
+      let isValid = true;
 
-  function renderMembers(users) {
-    membersTableBody.innerHTML = users
-      .map(
-        (user) => `
+      [memberName, memberEmail, memberPhone].forEach((field) => {
+        if (!validateMemberField(field)) {
+          isValid = false;
+        }
+      });
+
+      return isValid;
+    }
+
+    function clearMemberValidation() {
+      [memberName, memberEmail, memberPhone].forEach((field) => {
+        field.classList.remove("is-invalid", "is-valid");
+      });
+    }
+
+    function renderMembers(users) {
+      if (users.length === 0) {
+        membersTableBody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <i class="bi bi-exclamation-circle fs-4"></i>
+                    <p class="mb-0 mt-2">No users found matching your search</p>
+                </td>
+            </tr>
+        `;
+        return;
+      }
+      membersTableBody.innerHTML = users
+        .map(
+          (user) => `
       <tr>
         <td>${user.userID || "N/A"}</td>
         <td>${user.name || "N/A"}</td>
@@ -381,182 +386,181 @@
         </td>
       </tr>
     `
-      )
-      .join("");
+        )
+        .join("");
 
-    document.querySelectorAll(".view-btn").forEach((btn) => {
-      btn.addEventListener("click", () => showMemberDetails(btn.dataset.id));
-    });
+      document.querySelectorAll(".view-btn").forEach((btn) => {
+        btn.addEventListener("click", () => showMemberDetails(btn.dataset.id));
+      });
 
-    document.querySelectorAll(".edit-btn").forEach((btn) => {
-      btn.addEventListener("click", () => loadMemberForEdit(btn.dataset.id));
-    });
+      document.querySelectorAll(".edit-btn").forEach((btn) => {
+        btn.addEventListener("click", () => loadMemberForEdit(btn.dataset.id));
+      });
 
-    document.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", () => deleteMember(btn.dataset.id));
-    });
-  }
+      document.querySelectorAll(".delete-btn").forEach((btn) => {
+        btn.addEventListener("click", () => deleteMember(btn.dataset.id));
+      });
+    }
 
-  function showMemberDetails(id) {
-    const user = allUsers.find((u) => u.userID == id);
-    if (!user) return;
+    function showMemberDetails(id) {
+      const user = allUsers.find((u) => u.userID == id);
+      if (!user) return;
 
-    document.getElementById("detailUserId").textContent = user.userID || "N/A";
-    document.getElementById("detailName").textContent = user.name || "N/A";
-    document.getElementById("detailEmail").textContent = user.email || "N/A";
-    document.getElementById("detailPhone").textContent = user.phone || "N/A";
+      document.getElementById("detailUserId").textContent =
+        user.userID || "N/A";
+      document.getElementById("detailName").textContent = user.name || "N/A";
+      document.getElementById("detailEmail").textContent = user.email || "N/A";
+      document.getElementById("detailPhone").textContent = user.phone || "N/A";
 
-    const userBorrowRecords = allBorrowRecords.filter(
-      (record) => record.userID == user.userID
-    );
-    const borrowHistoryBody = document.getElementById("borrowHistoryBody");
+      const userBorrowRecords = allBorrowRecords.filter(
+        (record) => record.userID == user.userID
+      );
+      const borrowHistoryBody = document.getElementById("borrowHistoryBody");
 
-    borrowHistoryBody.innerHTML =
-      userBorrowRecords
-        .map((record) => {
-          const book = allBooks.find((b) => b.bookID == record.bookID);
-          return `
-        <tr>
-          <td>${book ? book.title : "Unknown Book"}</td>
-          <td>${record.borrowDate || "N/A"}</td>
-          <td><span class="badge ${
-            record.status === "returned" ? "bg-success" : "bg-warning"
-          }">${record.status || "N/A"}</span></td>
-        </tr>
-      `;
-        })
-        .join("") ||
-      '<tr><td colspan="3" class="text-center">No borrowing history found</td></tr>';
-
-    const userQueries = allQueries.filter(
-      (query) => query.userID == user.userID
-    );
-    const queriesBody = document.getElementById("queriesBody");
-
-    queriesBody.innerHTML =
-      userQueries
-        .map((query) => {
-          return `
-        <tr>
-          <td>${query.date || "N/A"}</td>
-          <td>${query.subject || "N/A"}</td>
-          <td><span class="badge ${
-            query.status === "Resolved" ? "bg-success" : "bg-warning"
-          }">${query.status || "N/A"}</span></td>
-        </tr>
-      `;
-        })
-        .join("") ||
-      '<tr><td colspan="3" class="text-center">No queries found</td></tr>';
-
-    const modal = new bootstrap.Modal(
-      document.getElementById("viewDetailsModal")
-    );
-    modal.show();
-  }
-
-  function loadMemberForEdit(id) {
-    const user = allUsers.find((u) => u.userID == id);
-    if (user) {
-      memberName.value = user.name || "";
-      memberEmail.value = user.email || "";
-      memberPhone.value = user.phone || "";
-
-      submitMemberBtn.innerHTML = `<i class="fa fa-edit me-2"></i>Update Member`;
-      editId = id;
+      borrowHistoryBody.innerHTML =
+        userBorrowRecords
+          .map((record) => {
+            const book = allBooks.find((b) => b.bookID == record.bookID);
+            return `
+      <tr>
+        <td>${book ? book.title : "Unknown Book"}</td>
+        <td>${record.borrowDate || "N/A"}</td>
+        <td><span class="badge ${
+          record.status === "returned" ? "bg-success" : "bg-warning"
+        }">${record.status || "N/A"}</span></td>
+      </tr>
+    `;
+          })
+          .join("") ||
+        '<tr><td colspan="3" class="text-center">No borrowing history found</td></tr>';
 
       const modal = new bootstrap.Modal(
-        document.getElementById("addMemberModal")
+        document.getElementById("viewDetailsModal")
       );
       modal.show();
     }
-  }
 
-  function deleteMember(id) {
-    if (confirm("Are you sure you want to delete this member?")) {
-      fetch(`${usersApiUrl}/${id}`, {
-        method: "DELETE",
+    function loadMemberForEdit(id) {
+      const user = allUsers.find((u) => u.userID == id);
+      if (user) {
+        memberName.value = user.name || "";
+        memberEmail.value = user.email || "";
+        memberPhone.value = user.phone || "";
+
+        submitMemberBtn.innerHTML = `<i class="fa fa-edit me-2"></i>Update Member`;
+        editId = id;
+
+        const modal = new bootstrap.Modal(
+          document.getElementById("addMemberModal")
+        );
+        modal.show();
+      }
+    }
+
+    function deleteMember(id) {
+      if (confirm("Are you sure you want to delete this member?")) {
+        fetch(`${usersApiUrl3}/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: getAuthorization(),
+          },
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Delete failed");
+            return fetchUsers();
+          })
+          .then(() => {
+            renderMembers(allUsers);
+            showAlert("Member deleted successfully", "success");
+          })
+          .catch((error) => {
+            console.error("Error deleting member:", error);
+            showAlert("Failed to delete member", "danger");
+          });
+      }
+    }
+
+    function handleMemberSubmit(e) {
+      e.preventDefault();
+      if (!validateMemberForm()) return;
+
+      const memberData = {
+        name: memberName.value.trim(),
+        email: memberEmail.value.trim(),
+        phone: memberPhone.value.trim(),
+        userType: "user",
+      };
+
+      if (!editId) {
+        const emailExists = allUsers.some(
+          (user) => user.email.toLowerCase() === memberData.email.toLowerCase()
+        );
+
+        if (emailExists) {
+          showAlert("A member with this email already exists!", "danger");
+          return;
+        }
+      }
+
+      const method = editId ? "PUT" : "POST";
+      const url = editId ? `${usersApiUrl3}/${editId}` : usersApiUrl3;
+
+      fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthorization(),
+        },
+        body: JSON.stringify(memberData),
       })
         .then((res) => {
-          if (!res.ok) throw new Error("Delete failed");
+          if (!res.ok) throw new Error(`${method} request failed`);
           return fetchUsers();
         })
         .then(() => {
+          memberForm.reset();
+          clearMemberValidation();
+          editId = null;
+          submitMemberBtn.innerHTML = `<i class="fa fa-plus me-2"></i>Add Member`;
           renderMembers(allUsers);
-          showAlert("Member deleted successfully", "success");
+          showAlert(
+            `Member ${method === "PUT" ? "updated" : "added"} successfully`,
+            "success"
+          );
+
+          const modal = bootstrap.Modal.getInstance(
+            document.getElementById("addMemberModal")
+          );
+          modal.hide();
         })
         .catch((error) => {
-          console.error("Error deleting member:", error);
-          showAlert("Failed to delete member", "danger");
+          console.error(error);
         });
     }
-  }
+    function showAlert(message, type) {
+      const existingAlert = document.querySelector(".alert-dismissible");
+      if (existingAlert) existingAlert.remove();
 
-  function handleMemberSubmit(e) {
-    e.preventDefault();
-    if (!validateMemberForm()) return;
+      const alertDiv = document.createElement("div");
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show fixed-top mx-auto mt-3`;
+      alertDiv.style.maxWidth = "500px";
+      alertDiv.style.zIndex = "1100";
+      alertDiv.innerHTML = `
+    <div class="d-flex align-items-center">
+      <i class="bi ${
+        type === "success" ? "bi-check-circle" : "bi-exclamation-triangle"
+      } me-2"></i>
+      <div>${message}</div>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
 
-    const memberData = {
-      name: memberName.value.trim(),
-      email: memberEmail.value.trim(),
-      phone: memberPhone.value.trim(),
-      userType: "user",
-    };
+      document.body.appendChild(alertDiv);
 
-    const method = editId ? "PUT" : "POST";
-    const url = editId ? `${usersApiUrl}/${editId}` : usersApiUrl;
-
-    fetch(url, {
-      method: method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(memberData),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`${method} request failed`);
-        return fetchUsers();
-      })
-      .then(() => {
-        memberForm.reset();
-        clearMemberValidation();
-        editId = null;
-        submitMemberBtn.innerHTML = `<i class="fa fa-plus me-2"></i>Add Member`;
-        renderMembers(allUsers);
-        showAlert(
-          `Member ${method === "PUT" ? "updated" : "added"} successfully`,
-          "success"
-        );
-
-        const modal = bootstrap.Modal.getInstance(
-          document.getElementById("addMemberModal")
-        );
-        modal.hide();
-      })
-      .catch((error) => {
-        console.error(
-          `Error ${method === "PUT" ? "updating" : "adding"} member:`,
-          error
-        );
-        showAlert(
-          `Failed to ${method === "PUT" ? "update" : "add"} member`,
-          "danger"
-        );
-      });
-  }
-
-  function showAlert(message, type) {
-    const existingAlert = document.querySelector(".alert");
-    if (existingAlert) existingAlert.remove();
-
-    const alertDiv = document.createElement("div");
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show fixed-top mx-auto mt-3`;
-    alertDiv.style.maxWidth = "500px";
-    alertDiv.style.zIndex = "1100";
-    alertDiv.role = "alert";
-    alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-
-    document.body.appendChild(alertDiv);
-  }
-</script>
+      setTimeout(() => {
+        const bsAlert = new bootstrap.Alert(alertDiv);
+        bsAlert.close();
+      }, 5000);
+    }
+  </script>
+</div>

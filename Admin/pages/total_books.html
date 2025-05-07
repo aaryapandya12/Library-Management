@@ -26,7 +26,7 @@
 
     <div class="table-responsive">
       <table class="table table-striped table-hover">
-        <thead class="table-dark">
+        <thead class="table-white">
           <tr>
             <th>Book ID</th>
             <th class="sortable">Title <i class="fa fa-sort ms-1"></i></th>
@@ -41,6 +41,9 @@
         <tbody id="bookTableBody"></tbody>
       </table>
     </div>
+    <nav class="mt-4 d-flex justify-content-end">
+      <ul class="pagination" id="paginationContainer"></ul>
+    </nav>
   </div>
 </div>
 
@@ -156,6 +159,8 @@
   </div>
 </div>
 
+<script src="../js/script.js"></script>
+
 <script>
   const booksApiUrl = "http://localhost:8080/api/books";
   const authorsApiUrl = "http://localhost:8080/api/authors";
@@ -163,6 +168,8 @@
   let allAuthors = [];
   let editId = null;
   let sortDirection = 1;
+  let currentPage = 0;
+  let totalPages = 0;
 
   const form = document.getElementById("bookForm");
   const title = document.getElementById("title");
@@ -180,24 +187,58 @@
     renderBooks(allBooks);
     populateAuthorDropdown();
     setupEventListeners();
+    fetchTotalBooks();
   });
 
-  function fetchBooks() {
-    return fetch(booksApiUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("Network response was not ok");
-        return res.json();
-      })
+  function fetchBooks(page = 0) {
+    currentPage = page;
+    fetch(`${booksApiUrl}/pageNum/${page}`, {
+      headers: {
+        Authorization: getAuthorization(),
+      },
+    })
+      .then((res) => res.json())
       .then((data) => {
-        allBooks = Array.isArray(data) ? data : [];
+        allBooks = data || [];
+        renderBooks(allBooks);
+        updatePagination();
       })
-      .catch((error) => {
-        console.error("Error fetching books:", error);
-      });
+      .catch((error) => console.error("Error fetching books:", error));
+  }
+
+  function fetchTotalBooks() {
+    fetch(`${booksApiUrl}/total`, {
+      headers: {
+        Authorization: getAuthorization(),
+      },
+    })
+      .then((res) => res.json())
+      .then((count) => {
+        totalPages = Math.ceil(count / 10);
+        updatePagination();
+      })
+      .catch((err) => console.error("Error fetching total books:", err));
+  }
+
+  function updatePagination() {
+    const paginationContainer = document.getElementById("paginationContainer");
+    paginationContainer.innerHTML = "";
+
+    for (let i = 0; i < totalPages; i++) {
+      const li = document.createElement("li");
+      li.className = `page-item ${i === currentPage ? "active" : ""}`;
+      li.innerHTML = `<button class="page-link">${i + 1}</button>`;
+      li.addEventListener("click", () => fetchBooks(i));
+      paginationContainer.appendChild(li);
+    }
   }
 
   function fetchAuthors() {
-    return fetch(authorsApiUrl)
+    return fetch(authorsApiUrl, {
+      headers: {
+        Authorization: getAuthorization(),
+      },
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
@@ -235,7 +276,8 @@
         (book) =>
           book.title.toLowerCase().includes(searchTerm) ||
           getAuthorName(book.authorID).toLowerCase().includes(searchTerm) ||
-          (book.description && book.description.toLowerCase().includes(searchTerm))
+          (book.description &&
+            book.description.toLowerCase().includes(searchTerm))
       );
       renderBooks(filtered);
     });
@@ -309,6 +351,17 @@
   }
 
   function renderBooks(books) {
+    if (books.length === 0) {
+      bookTableBody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <i class="bi bi-exclamation-circle fs-4"></i>
+                    <p class="mb-0 mt-2">No users found matching your search</p>
+                </td>
+            </tr>
+        `;
+      return;
+    }
     bookTableBody.innerHTML = books
       .map(
         (book) => `
@@ -365,11 +418,13 @@
       modal.show();
     }
   }
-
-  function deleteBook(bookId) {
+  function deleteBook(id) {
     if (confirm("Are you sure you want to delete this book?")) {
-      fetch(`${booksApiUrl}/${bookId}`, {
+      fetch(`${booksApiUrl}/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: getAuthorization(),
+        },
       })
         .then((res) => {
           if (!res.ok) throw new Error("Delete failed");
@@ -377,9 +432,11 @@
         })
         .then(() => {
           renderBooks(allBooks);
+          showAlert("Book deleted successfully", "success");
         })
         .catch((error) => {
           console.error("Error deleting book:", error);
+          showAlert("Failed to delete book", "danger");
         });
     }
   }
@@ -397,12 +454,30 @@
       availableCopies: parseInt(availableCopies.value),
     };
 
+    const bookExists = allBooks.some(
+      (existingBook) =>
+        existingBook.title.toLowerCase() === bookData.title.toLowerCase() &&
+        existingBook.authorID === bookData.authorID &&
+        (!editId || existingBook.bookID != editId) // Skip check for current book when editing
+    );
+
+    if (bookExists) {
+      showAlert(
+        "A book with this title by the same author already exists!",
+        "danger"
+      );
+      return;
+    }
+
     const method = editId ? "PUT" : "POST";
     const url = editId ? `${booksApiUrl}/${editId}` : booksApiUrl;
 
     fetch(url, {
       method: method,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: getAuthorization(),
+      },
       body: JSON.stringify(bookData),
     })
       .then((res) => {
@@ -423,5 +498,27 @@
           error
         );
       });
+  }
+  function showAlert(message, type) {
+    const existingAlert = document.querySelector(".alert-dismissible");
+    if (existingAlert) existingAlert.remove();
+
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `alert alert-dismissible alert-${type} fixed-top mx-auto mt-3`;
+    alertDiv.style.maxWidth = "500px";
+    alertDiv.style.zIndex = "1100";
+    alertDiv.innerHTML = `
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>${
+          type === "danger" ? "Warning!" : "Success!"
+        }</strong> ${message}
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+      const bsAlert = new bootstrap.Alert(alertDiv);
+      bsAlert.close();
+    }, 5000);
   }
 </script>

@@ -4,8 +4,29 @@
       <i class="fas fa-question-circle me-2"></i> User Queries
     </h2>
     <div class="d-flex">
-      <div class="dropdown me-2">
-        <ul class="dropdown-menu">
+      <div class="input-group me-3" style="width: 300px">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search queries..."
+          id="searchInput"
+          onkeyup="searchQueries()"
+        />
+        <button class="btn btn-outline-secondary" type="button">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <div class="dropdown">
+        <button
+          class="btn btn-outline-primary dropdown-toggle"
+          type="button"
+          id="filterDropdown"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          Filter
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="filterDropdown">
           <li>
             <a class="dropdown-item" href="#" onclick="filterQueries('all')"
               >All Queries</a
@@ -22,14 +43,6 @@
               href="#"
               onclick="filterQueries('Resolved')"
               >Resolved</a
-            >
-          </li>
-          <li>
-            <a
-              class="dropdown-item"
-              href="#"
-              onclick="filterQueries('High Priority')"
-              >High Priority</a
             >
           </li>
         </ul>
@@ -110,20 +123,27 @@
   </div>
 </div>
 
+<script src="../js/script.js"></script>
+
 <script>
+  let allQueries = [];
+  let allUsers = [];
+
+  const fetchHeaders = {
+    Authorization: getAuthorization(),
+    "Content-Type": "application/json",
+  };
   function fetchQueries() {
-    fetch("http://localhost:8080/api/queries")
+    fetch("http://localhost:8080/api/queries", { headers: fetchHeaders })
       .then((response) => response.json())
       .then((queries) => {
-        fetch("http://localhost:8080/api/users")
+        allQueries = queries;
+        fetch("http://localhost:8080/api/users", { headers: fetchHeaders })
           .then((response) => response.json())
           .then((users) => {
-            const userUsers = users.filter((user) => user.userType === "user");
-
-            const userQueries = queries.filter((query) =>
-              userUsers.some((user) => user.userID == query.userID)
-            );
-            displayQueries(userQueries, userUsers);
+            allUsers = users.filter((user) => user.userType === "user");
+            const userQueries = filterUserQueries(allQueries, allUsers);
+            displayQueries(userQueries, allUsers);
           })
           .catch((error) => {
             console.error("Error fetching users:", error);
@@ -134,19 +154,36 @@
       });
   }
 
+  function filterUserQueries(queries, users) {
+    return queries.filter((query) =>
+      users.some((user) => user.userID == query.userID)
+    );
+  }
+
   function displayQueries(queries, users) {
     const tableBody = document.getElementById("queriesTableBody");
+    if (queries.length === 0) {
+      tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4">
+                    <i class="bi bi-exclamation-circle fs-4"></i>
+                    <p class="mb-0 mt-2">No queries found matching your search</p>
+                </td>
+            </tr>
+        `;
+      return;
+    }
     tableBody.innerHTML = "";
 
     queries.forEach((query) => {
       const user = users.find((u) => u.userID == query.userID) || {
-        Name: "Unknown User",
+        name: "Unknown User",
         Email: "",
       };
 
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${query.queryID}</td>
+        <td>${query.id}</td>
         <td>
           <div class="d-flex align-items-center">
             <span>${user.name}</span>
@@ -162,19 +199,96 @@
             class="btn btn-sm btn-outline-primary me-1"
             data-bs-toggle="modal"
             data-bs-target="#queryDetailModal"
-            onclick="showQueryDetails('${query.queryID}')"
+            onclick="showQueryDetails('${query.id}')"
           >
             <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-success" onclick="resolveQuery('${
-            query.queryID
-          }')">
-            <i class="fas fa-check"></i>
           </button>
         </td>
       `;
       tableBody.appendChild(row);
     });
+  }
+
+  function searchQueries() {
+    const searchTerm = document
+      .getElementById("searchInput")
+      .value.toLowerCase();
+    const filteredQueries = allQueries.filter(
+      (query) =>
+        query.subject.toLowerCase().includes(searchTerm) ||
+        query.message.toLowerCase().includes(searchTerm) ||
+        query.id.toString().includes(searchTerm) ||
+        allUsers.some(
+          (user) =>
+            user.userID == query.userID &&
+            user.name.toLowerCase().includes(searchTerm)
+        )
+    );
+
+    const userQueries = filterUserQueries(filteredQueries, allUsers);
+    displayQueries(userQueries, allUsers);
+  }
+
+  function filterQueries(status) {
+    let filteredQueries = allQueries;
+    if (status !== "all") {
+      filteredQueries = allQueries.filter((query) => query.status === status);
+    }
+
+    const userQueries = filterUserQueries(filteredQueries, allUsers);
+    displayQueries(userQueries, allUsers);
+  }
+
+  function markAsResolved() {
+    const queryId = document
+      .getElementById("adminResponseTextarea")
+      .getAttribute("data-query-id");
+    const adminResponse = document.getElementById(
+      "adminResponseTextarea"
+    ).value;
+
+    if (!queryId) {
+      alert("No query selected");
+      return;
+    }
+
+    fetch(`http://localhost:8080/api/queries/${queryId}`, {
+      headers: fetchHeaders,
+    })
+      .then((response) => response.json())
+      .then((query) => {
+        const updatedQuery = {
+          ...query,
+          status: "Resolved",
+          adminResponse: adminResponse || "Issue resolved",
+        };
+
+        return fetch(`http://localhost:8080/api/queries/${queryId}`, {
+          method: "PUT",
+
+          headers: fetchHeaders,
+
+          body: JSON.stringify(updatedQuery),
+        });
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        alert("Query marked as resolved!");
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("queryDetailModal")
+        );
+        modal.hide();
+        fetchQueries();
+      })
+      .catch((error) => {
+        console.error("Error updating query:", error);
+        alert("Failed to update query status. Please try again.");
+      });
   }
 
   function getStatusBadgeClass(status) {
@@ -190,8 +304,57 @@
     }
   }
 
-  function showQueryDetails(queryId) {
-    fetch(`http://localhost:8080/api/queries/${queryId}`)
+  function sendResponse() {
+    const queryId = document
+      .getElementById("adminResponseTextarea")
+      .getAttribute("data-query-id");
+    const adminResponse = document.getElementById(
+      "adminResponseTextarea"
+    ).value;
+
+    if (!queryId) {
+      alert("No query selected");
+      return;
+    }
+
+    fetch(`http://localhost:8080/api/queries/${queryId}`, {
+      headers: fetchHeaders,
+    })
+      .then((response) => response.json())
+      .then((query) => {
+        const updatedQuery = {
+          ...query,
+          adminResponse: adminResponse,
+        };
+
+        return fetch(`http://localhost:8080/api/queries/${queryId}`, {
+          method: "PUT",
+          headers: fetchHeaders,
+          body: JSON.stringify(updatedQuery),
+        });
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        alert("Response sent successfully!");
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("queryDetailModal")
+        );
+        modal.hide();
+        fetchQueries();
+      })
+      .catch((error) => {
+        console.error("Error sending response:", error);
+        alert("Failed to send response. Please try again.");
+      });
+  }
+
+  function showQueryDetails(id) {
+    fetch(`http://localhost:8080/api/queries/${id}`, { headers: fetchHeaders })
       .then((response) => response.json())
       .then((query) => {
         document.getElementById("querySubject").textContent = query.subject;
@@ -201,7 +364,7 @@
           query.adminResponse;
         document
           .getElementById("adminResponseTextarea")
-          .setAttribute("data-query-id", queryId);
+          .setAttribute("data-query-id", id);
       })
       .catch((error) => {
         console.error("Error fetching query details:", error);

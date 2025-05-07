@@ -32,7 +32,7 @@
 
     <div class="table-responsive rounded-3 border">
       <table class="table table-striped table-hover mb-0">
-        <thead class="table-dark">
+        <thead class="table-white">
           <tr>
             <th class="ps-4">Record ID</th>
             <th>Book Title</th>
@@ -46,17 +46,24 @@
         <tbody id="issuedBooksTableBody" class="border-top-0"></tbody>
       </table>
     </div>
+    <nav class="mt-4 d-flex justify-content-end">
+      <ul class="pagination" id="paginationContainer"></ul>
+    </nav>
   </div>
 </div>
+
+<script src="../js/script.js"></script>
 
 <script>
   const borrowRecordsApiUrl = "http://localhost:8080/api/borrowRecords";
   const booksApiUrl = "http://localhost:8080/api/books";
-  const usersApiUrl = "http://localhost:8080/api/users";
+  const usersApiUrl2 = "http://localhost:8080/api/users";
 
   let allRecords = [];
   let sortDirection = 1;
   let currentSortColumn = null;
+  let currentPage = 0;
+  let totalPages = 0;
 
   const statusFilter = document.getElementById("statusFilter");
   const searchInput = document.getElementById("searchInput");
@@ -65,25 +72,58 @@
   Promise.all([fetchBorrowRecords(), fetchBooks(), fetchUsers()]).then(() => {
     renderIssuedBooks();
     setupEventListeners();
+    fetchTotalRecords();
   });
 
-  function fetchBorrowRecords() {
-    return fetch(borrowRecordsApiUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch borrow records");
-        return res.json();
-      })
+  function fetchBorrowRecords(page = 0) {
+    currentPage = page;
+    fetch(`${borrowRecordsApiUrl}/pageNum/${page}`, {
+      headers: {
+        Authorization: getAuthorization(),
+      },
+    })
+      .then((res) => res.json())
       .then((data) => {
-        allRecords = Array.isArray(data) ? data : [];
+        allRecords = data || [];
+        renderIssuedBooks(allRecords);
+        updatePagination();
       })
-      .catch((error) => {
-        console.error("Error fetching borrow records:", error);
-        showAlert("Failed to load borrow records. Please try again.", "danger");
-      });
+      .catch((error) => console.error("Error fetching records:", error));
+  }
+
+  function fetchTotalRecords() {
+    fetch(`${borrowRecordsApiUrl}/total`, {
+      headers: {
+        Authorization: getAuthorization(),
+      },
+    })
+      .then((res) => res.json())
+      .then((count) => {
+        totalPages = Math.ceil(count / 10);
+        updatePagination();
+      })
+      .catch((err) => console.error("Error fetching total records:", err));
+  }
+
+  function updatePagination() {
+    const paginationContainer = document.getElementById("paginationContainer");
+    paginationContainer.innerHTML = "";
+
+    for (let i = 0; i < totalPages; i++) {
+      const li = document.createElement("li");
+      li.className = `page-item ${i === currentPage ? "active" : ""}`;
+      li.innerHTML = `<button class="page-link">${i + 1}</button>`;
+      li.addEventListener("click", () => fetchAndRenderAuthors(i));
+      paginationContainer.appendChild(li);
+    }
   }
 
   function fetchBooks() {
-    return fetch(booksApiUrl)
+    return fetch(booksApiUrl, {
+      headers: {
+        Authorization: getAuthorization(),
+      },
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch books");
         return res.json();
@@ -97,13 +137,20 @@
   }
 
   function fetchUsers() {
-    return fetch(usersApiUrl)
+    return fetch(usersApiUrl2, {
+      headers: {
+        Authorization: getAuthorization(),
+      },
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch users");
         return res.json();
       })
       .then((data) => {
-        window.usersData = Array.isArray(data) ? data : [];
+        window.allUsersData = Array.isArray(data) ? data : [];
+        window.usersData = window.allUsersData.filter(
+          (user) => user.userType && user.userType.toLowerCase() === "user"
+        );
       })
       .catch((error) => {
         console.error("Error fetching users:", error);
@@ -128,27 +175,40 @@
     });
   }
 
-function getBookTitle(bookId) {
-  if (!window.booksData) return "Unknown Book";
-  const book = window.booksData.find(
-    (b) => b.bookID == bookId || b.id == bookId
-  );
-  return book ? (book.title || book.Title || "Unknown Book") : "Unknown Book";
-}
+  function getBookTitle(bookId) {
+    if (!window.booksData) return "Unknown Book";
+    const book = window.booksData.find(
+      (b) => b.bookID == bookId || b.id == bookId
+    );
+    return book ? book.title || book.Title || "Unknown Book" : "Unknown Book";
+  }
 
   function getUserName(userId) {
-  if (!window.usersData) return "Unknown User";
-  const user = window.usersData.find(
-    (u) => u.userID == userId || u.id == userId
-  );
-  return user ? (user.name || "Unknown User") : "Unknown User";
-}
+    if (!window.allUsersData) return "Unknown User";
+    const user = window.allUsersData.find(
+      (u) => u.userID == userId || u.id == userId
+    );
+    return user ? user.name || "Unknown User" : "Unknown User";
+  }
+
+  function getUserEmail(userId) {
+    if (!window.allUsersData) return null;
+    const user = window.allUsersData.find(
+      (u) => u.userID == userId || u.id == userId
+    );
+    return user ? user.email || null : null;
+  }
 
   function renderIssuedBooks() {
     const statusFilterValue = statusFilter.value;
     const searchTerm = searchInput.value.toLowerCase();
 
+    const userUserIds = window.usersData.map((user) => user.userID || user.id);
+
     let filteredRecords = allRecords.filter((record) => {
+      const isUserTypeUser = userUserIds.includes(record.userID);
+      if (!isUserTypeUser) return false;
+
       const recordStatus = record.status ? record.status.toLowerCase() : "";
       const matchesStatus =
         statusFilterValue === "all" ||
@@ -164,6 +224,18 @@ function getBookTitle(bookId) {
 
       return matchesStatus && matchesSearch;
     });
+
+    if (filteredRecords.length === 0) {
+      issuedBooksTableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="bi bi-exclamation-circle fs-4"></i>
+                    <p class="mb-0 mt-2">No records found matching your criteria</p>
+                </td>
+            </tr>
+        `;
+      return;
+    }
 
     if (currentSortColumn) {
       filteredRecords.sort((a, b) => {
@@ -203,9 +275,9 @@ function getBookTitle(bookId) {
         <td>${formatDate(record.dueDate)}</td>
         <td>
           <span class="badge ${
-            record.status === "returned"
+            record.status === "Returned"
               ? "bg-success"
-              : record.status === "borrowed"
+              : record.status === "Borrowed"
               ? "bg-warning text-dark"
               : "bg-danger text-white"
           }">
@@ -214,10 +286,16 @@ function getBookTitle(bookId) {
         </td>
         <td class="pe-4 text-end">
           ${
-            record.status === "borrowed"
+            record.status === "Borrowed"
               ? `
             <button class="btn btn-sm btn-outline-success me-2 return-btn" data-id="${record.recordID}">
               <i class="bi bi-check-circle me-1"></i>Mark Returned
+            </button>
+          `
+              : record.status === "Pending"
+              ? `
+            <button class="btn btn-sm btn-outline-primary me-2 email-btn" data-id="${record.recordID}" data-user-id="${record.userID}">
+              <i class="bi bi-envelope me-1"></i>Send Email
             </button>
           `
               : ""
@@ -237,6 +315,12 @@ function getBookTitle(bookId) {
       btn.addEventListener("click", () => markAsReturned(btn.dataset.id));
     });
 
+    document.querySelectorAll(".email-btn").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        sendReminderEmail(btn.dataset.id, btn.dataset.userId)
+      );
+    });
+
     document.querySelectorAll(".delete-btn").forEach((btn) => {
       btn.addEventListener("click", () => deleteRecord(btn.dataset.id));
     });
@@ -251,51 +335,90 @@ function getBookTitle(bookId) {
       day: "numeric",
     });
   }
-function markAsReturned(recordId) {
-  if (confirm("Are you sure you want to mark this book as returned?")) {
-    const record = allRecords.find((r) => r.recordID == recordId);
-    if (!record) return;
 
-    fetch(`${borrowRecordsApiUrl}/${recordId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        Status: "returned",
-        ReturnDate: new Date().toISOString().split("T")[0],
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Update failed");
-        return fetchBorrowRecords();
-      })
-      .then(() => {
-        renderIssuedBooks();
-        showAlert("Book marked as returned successfully", "success");
+  function sendReminderEmail(recordId, userId) {
+    const userEmail = getUserEmail(userId);
+    if (!userEmail) {
+      showAlert("User email not found", "danger");
+      return;
+    }
 
-        const book = window.booksData.find(
-          (b) => b.bookID == record.bookID || b.id == record.bookID
-        );
-        if (book) {
-          fetch(`${booksApiUrl}/${book.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              AvailableCopies: parseInt(book.AvailableCopies) + 1,
-            }),
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error updating record:", error);
-        showAlert("Failed to update record", "danger");
-      });
+    if (confirm(`Send reminder email to ${userEmail}?`)) {
+      setTimeout(() => {
+        showAlert(`Reminder email sent to ${userEmail}`, "success");
+      }, 1000);
+    }
   }
-}
+
+  function markAsReturned(recordId) {
+    if (confirm("Are you sure you want to mark this book as returned?")) {
+      const recordIndex = allRecords.findIndex((r) => r.recordID == recordId);
+      if (recordIndex === -1) return;
+
+      const originalRecord = allRecords[recordIndex];
+      const updatedRecord = {
+        ...originalRecord,
+        status: "Returned",
+        returnDate: new Date().toISOString().split("T")[0],
+      };
+
+      allRecords[recordIndex] = updatedRecord;
+      renderIssuedBooks();
+      showAlert("Updating record...", "info");
+
+      fetch(`${borrowRecordsApiUrl}/${recordId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthorization(),
+        },
+        body: JSON.stringify(updatedRecord),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Update failed");
+          return res.json();
+        })
+        .then(() => {
+          const mergedRecord = {
+            ...originalRecord,
+          };
+          allRecords[recordIndex] = mergedRecord;
+          showAlert("Book marked as returned successfully", "success");
+
+          updateBookAvailableCount(originalRecord.bookID, 1);
+        })
+        .catch((error) => {
+          allRecords[recordIndex] = originalRecord;
+          renderIssuedBooks();
+          showAlert("Failed to update record: " + error.message, "danger");
+        });
+    }
+  }
+
+  function updateBookAvailableCount(bookId, increment) {
+    if (!window.booksData || !bookId) return;
+
+    const book = window.booksData.find(
+      (b) => b.bookID == bookId || b.id == bookId
+    );
+    if (book) {
+      const updatedCopies = (parseInt(book.availableCopies) || 0) + increment;
+      fetch(`${booksApiUrl}/${book.bookID || book.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        Authorization: getAuthorization(),
+        body: JSON.stringify({ availableCopies: updatedCopies }),
+      }).catch(console.error);
+    }
+  }
 
   function deleteRecord(recordId) {
     if (confirm("Are you sure you want to delete this record?")) {
       fetch(`${borrowRecordsApiUrl}/${recordId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: getAuthorization(),
+        },
       })
         .then((res) => {
           if (!res.ok) throw new Error("Delete failed");

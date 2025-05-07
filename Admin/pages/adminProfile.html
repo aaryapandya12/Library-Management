@@ -1,0 +1,80 @@
+<title>My Profile</title>
+<style>
+  .profile-card {
+    background-color: white;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  .profile-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  .profile-header h2 {
+    color: #333;
+    margin: 10px 0 5px;
+  }
+  .profile-details {
+    margin-top: 20px;
+  }
+  .detail-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .detail-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .detail-label {
+    font-weight: bold;
+    color: #555;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .detail-value {
+    color: #333;
+    font-size: 16px;
+  }
+</style>
+
+<div class="profile-card">
+  <div class="profile-header">
+    <h2>User Profile</h2>
+  </div>
+
+  <div class="profile-details">
+    <div class="detail-item">
+      <span class="detail-label">User ID</span>
+      <span class="detail-value" id="userId"></span>
+    </div>
+
+    <div class="detail-item">
+      <span class="detail-label">User Name</span>
+      <span class="detail-value" id="userName"></span>
+    </div>
+
+    <div class="detail-item">
+      <span class="detail-label">User Type</span>
+      <span class="detail-value" id="userType"></span>
+    </div>
+
+    <div class="detail-item">
+      <span class="detail-label">Email</span>
+      <span class="detail-value" id="email"></span>
+    </div>
+  </div>
+</div>
+
+<script src="../js/script.js"></script>
+<script>
+  document.getElementById("userId").textContent = getUserId();
+  document.getElementById("userName").textContent = getUserName();
+  document.getElementById("userType").textContent = getUserType();
+  document.getElementById("email").textContent = getUserEmail();
+</script>
