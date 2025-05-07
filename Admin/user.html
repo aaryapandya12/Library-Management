@@ -28,31 +28,7 @@
         >
 
         <div class="d-flex align-items-center ms-auto">
-          <form
-            class="d-flex align-items-center me-3"
-            role="search"
-            style="max-width: 300px"
-          >
-            <input
-              class="form-control rounded-start"
-              type="search"
-              placeholder="Search books..."
-              aria-label="Search"
-            />
-            <button class="btn btn-light rounded-end" type="submit">
-              <i class="fa fa-search text-primary"></i>
-            </button>
-          </form>
-
-          <div id="cartIcon" class="me-3">
-            <a
-              href="#"
-              class="text-white position-relative"
-              onclick="loadPage('cart.html')"
-            >
-              <i class="fa fa-shopping-cart"></i>
-            </a>
-          </div>
+          
 
           <div class="dropdown">
             <a
@@ -63,8 +39,14 @@
               <i class="fa fa-user"></i> <span id="userRoleDisplay">User</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="#">Settings</a></li>
-              <li><a class="dropdown-item" href="#">My Profile</a></li>
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  onclick="loadPage('pages/userProfile.html')"
+                  >My Profile</a
+                >
+              </li>
             </ul>
           </div>
         </div>

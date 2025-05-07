@@ -3,8 +3,10 @@
     <h3><i class="bi bi-bookmark-heart"></i> My Saved Books</h3>
   </div>
 
-  <div id="saved-books-container">
-  </div>
+  <div
+    id="saved-books-container"
+    class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4"
+  ></div>
 
   <div id="empty-message" class="text-center py-5 text-muted">
     <i class="bi bi-bookmarks fs-1"></i>
@@ -14,49 +16,56 @@
 </div>
 
 <script>
-  const container = document.getElementById("saved-books-container");
-  const emptyMsg = document.getElementById("empty-message");
+  function getSavedBooks() {
+    const userId = getUserId();
+    const savedStr = localStorage.getItem(`savedBooks_${userId}`);
+    return savedStr ? JSON.parse(savedStr) : [];
+  }
 
-  function loadSavedBooks() {
+  function renderSavedBooks() {
+    const container = document.getElementById("saved-books-container");
+    const emptyMessage = document.getElementById("empty-message");
+    const savedBooks = getSavedBooks();
+
     container.innerHTML = "";
 
-    const savedStr = localStorage.getItem("savedBooks");
-    const savedBooks = savedStr ? JSON.parse(savedStr) : [];
-
-    console.log("Loaded saved books:", savedBooks); 
-
     if (savedBooks.length === 0) {
-      emptyMsg.style.display = "block";
-      container.style.display = "none";
-    } else {
-      emptyMsg.style.display = "none";
-      container.style.display = "block";
+      emptyMessage.style.display = "block";
+      return;
+    }
 
-      savedBooks.forEach((book) => {
-        const card = document.createElement("div");
-        card.className = "card mb-3 saved-card";
+    emptyMessage.style.display = "none";
 
-        card.innerHTML = `
-          <div class="card-body">
-            <h5 class="card-title">${book.title}</h5>
-            <p class="card-text text-muted mb-1">by ${book.author}</p>
-            <button class="btn btn-sm btn-danger mt-2" onclick="removeBook('${book.bookId}')">
-              <i class="bi bi-trash"></i> Remove
+    savedBooks.forEach((book) => {
+      const badgeColor = getBadgeColor(book.genre);
+
+      const bookCard = document.createElement("div");
+      bookCard.className = "col";
+      bookCard.innerHTML = `
+        <div class="card h-100 border-0 shadow-sm book-card">
+          <div class="card-body p-3">
+            <h5 class="card-title mb-1">${book.title}</h5>
+            <p class="text-muted small mb-2">by ${book.author}</p>
+            <div class="d-flex gap-2 mb-3">
+              <span class="badge bg-${badgeColor} bg-opacity-10 text-${badgeColor}">
+                ${book.genre}
+              </span>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-0 p-3 pt-0">
+            <button class="btn btn-primary btn-sm w-100" onclick="borrowBook('${book.bookId}')">
+              <i class="bi bi-bookmark-plus me-1"></i>Borrow Now
             </button>
           </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-  } 
-  window.removeBook = function (bookId) {
-    const savedStr = localStorage.getItem("savedBooks");
-    let savedBooks = savedStr ? JSON.parse(savedStr) : [];
+        </div>
+      `;
+      container.appendChild(bookCard);
+    });
+  }
 
-    savedBooks = savedBooks.filter((book) => book.bookId != bookId);
-    localStorage.setItem("savedBooks", JSON.stringify(savedBooks));
+  function borrowBook(bookId) {
+    alert("Book borrowed successfully!");
+  }
 
-    loadSavedBooks();
-  };
-  loadSavedBooks();
+  renderSavedBooks();
 </script>

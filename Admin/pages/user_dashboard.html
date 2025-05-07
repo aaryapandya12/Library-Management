@@ -1,6 +1,6 @@
 <div class="container py-3">
   <div class="mb-5 text-center">
-    <h1 class="fw-bold text-black">Welcome to Our Library</h1>
+    <h1 class="fw-bold text-black" id="welcome">Welcome to Our Library</h1>
     <p class="lead text-muted">
       Discover your next great read from our curated collection
     </p>
@@ -76,6 +76,9 @@
 />
 
 <script>
+  document.getElementById(
+    "welcome"
+  ).innerHTML = `<h5>Welcome, ${getUserName()}</h5>`;
   const BOOKS_API = "http://localhost:8080/api/books";
   const AUTHORS_API = "http://localhost:8080/api/authors";
   const fetchHeaders = {
@@ -226,6 +229,7 @@
 
   function saveBook(bookId) {
     try {
+      const userId = getUserId();
       const book = libraryData.books.find((b) => b.bookID === bookId);
       const author = getAuthorById(book.authorID);
 
@@ -234,7 +238,7 @@
         return;
       }
 
-      const savedStr = localStorage.getItem("savedBooks");
+      const savedStr = localStorage.getItem(`savedBooks_${userId}`);
       const savedBooks = savedStr ? JSON.parse(savedStr) : [];
 
       const isAlreadySaved = savedBooks.some((b) => b.bookId === bookId);
@@ -251,12 +255,12 @@
         date: new Date().toLocaleDateString(),
       });
 
-      localStorage.setItem("savedBooks", JSON.stringify(savedBooks));
+      localStorage.setItem(`savedBooks_${userId}`, JSON.stringify(savedBooks));
       alert(`"${book.title}" has been saved for later`);
 
       console.log(
         "Saved books:",
-        JSON.parse(localStorage.getItem("savedBooks"))
+        JSON.parse(localStorage.getItem(`savedBooks_${userId}`))
       );
     } catch (error) {
       console.error("Error saving book:", error);
@@ -266,6 +270,7 @@
 
   async function borrowBook(bookId) {
     try {
+      const userId = getUserId();
       const book = libraryData.books.find((b) => b.bookID === bookId);
       const author = getAuthorById(book.authorID);
 
@@ -283,7 +288,7 @@
         }),
       });
 
-      const historyStr = localStorage.getItem("borrowedBooks");
+      const historyStr = localStorage.getItem(`borrowedBooks_${userId}`);
       const history = historyStr ? JSON.parse(historyStr) : [];
 
       history.push({
@@ -293,7 +298,7 @@
         bookId: book.bookID,
       });
 
-      localStorage.setItem("borrowedBooks", JSON.stringify(history));
+      localStorage.setItem(`borrowedBooks_${userId}`, JSON.stringify(history));
 
       alert(`Borrowed "${book.title}"`);
 

@@ -1,29 +1,49 @@
 <h3 class="mb-4">📚 My Borrowing History</h3>
 
-<div id="history-list">
-</div>
+<div id="history-list" class="row row-cols-1 row-cols-md-2 g-4"></div>
 
 <script>
-  const historyStr = localStorage.getItem("borrowedBooks");
-  const history = historyStr ? JSON.parse(historyStr) : [];
-  const listElement = document.getElementById("history-list");
+  function getBorrowingHistory() {
+    const userId = getUserId();
+    const historyStr = localStorage.getItem(`borrowedBooks_${userId}`);
+    return historyStr ? JSON.parse(historyStr) : [];
+  }
 
-  if (history.length === 0) {
-    listElement.innerHTML =
-      '<p class="text-muted">You haven\'t borrowed any books yet.</p>';
-  } else {
-    listElement.innerHTML = history
+  function renderBorrowingHistory() {
+    const historyList = document.getElementById("history-list");
+    const history = getBorrowingHistory();
+
+    if (history.length === 0) {
+      historyList.innerHTML = `
+        <div class="col-12">
+      
+            <i class="bi bi-info-circle me-2"></i>
+            You haven't borrowed any books yet.
+          
+        </div>
+      `;
+      return;
+    }
+
+    historyList.innerHTML = history
       .map(
         (book) => `
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <h5>${book.title}</h5>
-                        <p class="mb-1">by ${book.author}</p>
-                        <small class="text-muted">Borrowed: ${book.date}</small>
-                    </div>
-                </div>
-            `
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">${book.title}</h5>
+            <p class="card-text text-muted">by ${book.author}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">Borrowed on: ${book.date}</small>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    `
       )
       .join("");
   }
+
+  renderBorrowingHistory();
 </script>
