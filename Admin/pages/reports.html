@@ -5,82 +5,84 @@
     </button>
   </div>
 
-  <div class="row">
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Top Borrowed Books</h6>
-        </div>
-        <div class="card-body p-3">
-          <div
-            class="chart-container"
-            style="position: relative; height: 250px"
-          >
-            <canvas id="topBooksChart"></canvas>
+  <div id="dashboardContent">
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-white p-3">
+            <h6 class="mb-0">Top Borrowed Books</h6>
+          </div>
+          <div class="card-body p-3">
+            <div
+              class="chart-container"
+              style="position: relative; height: 250px"
+            >
+              <canvas id="topBooksChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Genre Distribution</h6>
-        </div>
-        <div class="card-body p-3">
-          <div
-            class="chart-container"
-            style="position: relative; height: 250px"
-          >
-            <canvas id="genreDistributionChart"></canvas>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-white p-3">
+            <h6 class="mb-0">Genre Distribution</h6>
+          </div>
+          <div class="card-body p-3">
+            <div
+              class="chart-container"
+              style="position: relative; height: 250px"
+            >
+              <canvas id="genreDistributionChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Books and Authors</h6>
-        </div>
-        <div class="card-body p-3">
-          <div
-            class="chart-container"
-            style="position: relative; height: 250px"
-          >
-            <canvas id="booksandAuthorChart"></canvas>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-white p-3">
+            <h6 class="mb-0">Books and Authors</h6>
+          </div>
+          <div class="card-body p-3">
+            <div
+              class="chart-container"
+              style="position: relative; height: 250px"
+            >
+              <canvas id="booksandAuthorChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Total Borrows and pending</h6>
-        </div>
-        <div class="card-body p-3">
-          <div
-            class="chart-container"
-            style="position: relative; height: 250px"
-          >
-            <canvas id="borrowsAndPendingChart"></canvas>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-white p-3">
+            <h6 class="mb-0">Total Borrows and pending</h6>
+          </div>
+          <div class="card-body p-3">
+            <div
+              class="chart-container"
+              style="position: relative; height: 250px"
+            >
+              <canvas id="borrowsAndPendingChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-white p-3">
-          <h6 class="mb-0">Total Queries</h6>
-        </div>
-        <div class="card-body p-3">
-          <div
-            class="chart-container"
-            style="position: relative; height: 250px"
-          >
-            <canvas id="queryChart"></canvas>
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-white p-3">
+            <h6 class="mb-0">Total Queries</h6>
+          </div>
+          <div class="card-body p-3">
+            <div
+              class="chart-container"
+              style="position: relative; height: 250px"
+            >
+              <canvas id="queryChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -90,6 +92,19 @@
   <script src="../js/script.js"></script>
 
   <script>
+    document
+      .getElementById("saveReportBtn")
+      .addEventListener("click", function () {
+        html2canvas(document.getElementById("dashboardContent")).then(
+          (canvas) => {
+            const link = document.createElement("a");
+            link.download = "dashboard-report.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+          }
+        );
+      });
+
     async function fetchDataAndUpdate() {
       try {
         const headers = {
@@ -134,24 +149,6 @@
         console.error("Error fetching data:", error);
       }
     }
-
-    document
-      .getElementById("saveReportBtn")
-      .addEventListener("click", async function () {
-        try {
-          const element = document.querySelector(".row.g-3");
-          const canvas = await html2canvas(element);
-
-          const image = canvas.toDataURL("image/png");
-          const link = document.createElement("a");
-          link.href = image;
-          link.download = "library-dashboard-report.png";
-          link.click();
-        } catch (error) {
-          console.error("Error generating report:", error);
-          alert("Failed to generate report. Please try again.");
-        }
-      });
 
     function renderGenreChart(genreData) {
       const ctx = document

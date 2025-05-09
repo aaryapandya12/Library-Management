@@ -209,7 +209,7 @@
     })
       .then((res) => res.json())
       .then((count) => {
-        totalPages = Math.ceil(count / 10); // assuming 10 per page
+        totalPages = Math.ceil(count / 10);
         updatePagination();
       })
       .catch((err) => console.error("Error fetching total authors:", err));

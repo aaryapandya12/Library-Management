@@ -81,6 +81,8 @@
   ).innerHTML = `<h5>Welcome, ${getUserName()}</h5>`;
   const BOOKS_API = "http://localhost:8080/api/books";
   const AUTHORS_API = "http://localhost:8080/api/authors";
+  const BORROW_RECORDS_API = "http://localhost:8080/api/borrowRecords";
+
   const fetchHeaders = {
     Authorization: getAuthorization(),
     "Content-Type": "application/json",
@@ -279,6 +281,28 @@
         return;
       }
 
+      const borrowDate = new Date();
+      const dueDate = new Date();
+      dueDate.setDate(borrowDate.getDate() + 14); 
+
+      const newRecord = {
+        bookID: bookId,
+        userID: userId,
+        borrowDate: borrowDate.toISOString().split("T")[0],
+        dueDate: dueDate.toISOString().split("T")[0],
+        status: "Borrowed",
+      };
+
+      const recordResponse = await fetch(BORROW_RECORDS_API, {
+        method: "POST",
+        headers: fetchHeaders,
+        body: JSON.stringify(newRecord),
+      });
+
+      if (!recordResponse.ok) {
+        throw new Error("Failed to create borrow record");
+      }
+
       await fetch(`${BOOKS_API}/${bookId}`, {
         method: "PUT",
         headers: fetchHeaders,
@@ -287,6 +311,8 @@
           availableCopies: book.availableCopies - 1,
         }),
       });
+
+      book.availableCopies -= 1;
 
       const historyStr = localStorage.getItem(`borrowedBooks_${userId}`);
       const history = historyStr ? JSON.parse(historyStr) : [];
@@ -306,7 +332,7 @@
       renderBooks(currentFilter);
     } catch (error) {
       console.error("Error:", error);
-      alert("Couldn't borrow book");
+      alert("Couldn't borrow book: " + error.message);
     }
   }
 

@@ -105,7 +105,6 @@
             <div class="col-md-6">
               <label for="genre" class="form-label">Genre</label>
               <select class="form-select" id="genre" required>
-                <!-- <option value="all" selected>All Categories</option> -->
               </select>
               <div class="invalid-feedback">Please select a genre.</div>
             </div>
@@ -463,7 +462,7 @@
       (existingBook) =>
         existingBook.title.toLowerCase() === bookData.title.toLowerCase() &&
         existingBook.authorID === bookData.authorID &&
-        (!editId || existingBook.bookID != editId) // Skip check for current book when editing
+        (!editId || existingBook.bookID != editId) 
     );
 
     if (bookExists) {

@@ -46,38 +46,36 @@
         <tbody id="issuedBooksTableBody" class="border-top-0"></tbody>
       </table>
     </div>
-    <nav class="mt-4 d-flex justify-content-end">
-      <ul class="pagination" id="paginationContainer"></ul>
-    </nav>
   </div>
 </div>
-
-<script src="../js/script.js"></script>
 
 <script>
   const borrowRecordsApiUrl = "http://localhost:8080/api/borrowRecords";
   const booksApiUrl = "http://localhost:8080/api/books";
-  const usersApiUrl2 = "http://localhost:8080/api/users";
+  const usersApiUrl4 = "http://localhost:8080/api/users";
 
   let allRecords = [];
   let sortDirection = 1;
   let currentSortColumn = null;
-  let currentPage = 0;
-  let totalPages = 0;
+  let booksData = [];
+  let allUsersData = [];
+  let usersData = [];
 
-  const statusFilter = document.getElementById("statusFilter");
-  const searchInput = document.getElementById("searchInput");
-  const issuedBooksTableBody = document.getElementById("issuedBooksTableBody");
+  initializeData();
 
-  Promise.all([fetchBorrowRecords(), fetchBooks(), fetchUsers()]).then(() => {
-    renderIssuedBooks();
-    setupEventListeners();
-    fetchTotalRecords();
-  });
+  async function initializeData() {
+    try {
+      await Promise.all([fetchBooks(), fetchUsers()]);
+      await fetchBorrowRecords();
+      setupEventListeners();
+    } catch (error) {
+      console.error("Initialization error:", error);
+      showAlert("Failed to load data. Please try again later.", "danger");
+    }
+  }
 
-  function fetchBorrowRecords(page = 0) {
-    currentPage = page;
-    fetch(`${borrowRecordsApiUrl}/pageNum/${page}`, {
+  function fetchBorrowRecords() {
+    fetch(borrowRecordsApiUrl, {
       headers: {
         Authorization: getAuthorization(),
       },
@@ -86,80 +84,46 @@
       .then((data) => {
         allRecords = data || [];
         renderIssuedBooks(allRecords);
-        updatePagination();
       })
       .catch((error) => console.error("Error fetching records:", error));
   }
 
-  function fetchTotalRecords() {
-    fetch(`${borrowRecordsApiUrl}/total`, {
-      headers: {
-        Authorization: getAuthorization(),
-      },
-    })
-      .then((res) => res.json())
-      .then((count) => {
-        totalPages = Math.ceil(count / 10);
-        updatePagination();
-      })
-      .catch((err) => console.error("Error fetching total records:", err));
-  }
-
-  function updatePagination() {
-    const paginationContainer = document.getElementById("paginationContainer");
-    paginationContainer.innerHTML = "";
-
-    for (let i = 0; i < totalPages; i++) {
-      const li = document.createElement("li");
-      li.className = `page-item ${i === currentPage ? "active" : ""}`;
-      li.innerHTML = `<button class="page-link">${i + 1}</button>`;
-      li.addEventListener("click", () => fetchAndRenderAuthors(i));
-      paginationContainer.appendChild(li);
+  async function fetchBooks() {
+    try {
+      const response = await fetch(booksApiUrl, {
+        headers: { Authorization: getAuthorization() },
+      });
+      if (!response.ok) throw new Error("Failed to fetch books");
+      booksData = await response.json();
+    } catch (error) {
+      console.error("Error fetching books:", error);
+      throw error;
     }
   }
 
-  function fetchBooks() {
-    return fetch(booksApiUrl, {
-      headers: {
-        Authorization: getAuthorization(),
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch books");
-        return res.json();
-      })
-      .then((data) => {
-        window.booksData = Array.isArray(data) ? data : [];
-      })
-      .catch((error) => {
-        console.error("Error fetching books:", error);
+  async function fetchUsers() {
+    try {
+      const response = await fetch(usersApiUrl4, {
+        headers: { Authorization: getAuthorization() },
       });
-  }
-
-  function fetchUsers() {
-    return fetch(usersApiUrl2, {
-      headers: {
-        Authorization: getAuthorization(),
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch users");
-        return res.json();
-      })
-      .then((data) => {
-        window.allUsersData = Array.isArray(data) ? data : [];
-        window.usersData = window.allUsersData.filter(
-          (user) => user.userType && user.userType.toLowerCase() === "user"
-        );
-      })
-      .catch((error) => {
-        console.error("Error fetching users:", error);
-      });
+      if (!response.ok) throw new Error("Failed to fetch users");
+      allUsersData = await response.json();
+      usersData = allUsersData.filter(
+        (user) => user.userType && user.userType.toLowerCase() === "user"
+      );
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      throw error;
+    }
   }
 
   function setupEventListeners() {
-    statusFilter.addEventListener("change", renderIssuedBooks);
-    searchInput.addEventListener("input", renderIssuedBooks);
+    document
+      .getElementById("statusFilter")
+      .addEventListener("change", renderIssuedBooks);
+    document
+      .getElementById("searchInput")
+      .addEventListener("input", renderIssuedBooks);
 
     document.querySelectorAll("th[data-sortable]").forEach((header) => {
       header.addEventListener("click", () => {
@@ -176,34 +140,29 @@
   }
 
   function getBookTitle(bookId) {
-    if (!window.booksData) return "Unknown Book";
-    const book = window.booksData.find(
-      (b) => b.bookID == bookId || b.id == bookId
-    );
+    if (!booksData) return "Unknown Book";
+    const book = booksData.find((b) => b.bookID == bookId || b.id == bookId);
     return book ? book.title || book.Title || "Unknown Book" : "Unknown Book";
   }
 
-  function getUserName(userId) {
-    if (!window.allUsersData) return "Unknown User";
-    const user = window.allUsersData.find(
-      (u) => u.userID == userId || u.id == userId
-    );
+  function getUserNames(userId) {
+    if (!allUsersData) return "Unknown User";
+    const user = allUsersData.find((u) => u.userID == userId || u.id == userId);
     return user ? user.name || "Unknown User" : "Unknown User";
   }
 
-  function getUserEmail(userId) {
-    if (!window.allUsersData) return null;
-    const user = window.allUsersData.find(
-      (u) => u.userID == userId || u.id == userId
-    );
+  function getUserEmails(userId) {
+    if (!allUsersData) return null;
+    const user = allUsersData.find((u) => u.userID == userId || u.id == userId);
     return user ? user.email || null : null;
   }
 
   function renderIssuedBooks() {
-    const statusFilterValue = statusFilter.value;
-    const searchTerm = searchInput.value.toLowerCase();
-
-    const userUserIds = window.usersData.map((user) => user.userID || user.id);
+    const statusFilterValue = document.getElementById("statusFilter").value;
+    const searchTerm = document
+      .getElementById("searchInput")
+      .value.toLowerCase();
+    const userUserIds = usersData.map((user) => user.userID || user.id);
 
     let filteredRecords = allRecords.filter((record) => {
       const isUserTypeUser = userUserIds.includes(record.userID);
@@ -215,7 +174,7 @@
         recordStatus === statusFilterValue.toLowerCase();
 
       const bookTitle = getBookTitle(record.bookID).toLowerCase();
-      const userName = getUserName(record.userID).toLowerCase();
+      const userName = getUserNames(record.userID).toLowerCase();
 
       const matchesSearch =
         bookTitle.includes(searchTerm) ||
@@ -224,18 +183,6 @@
 
       return matchesStatus && matchesSearch;
     });
-
-    if (filteredRecords.length === 0) {
-      issuedBooksTableBody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center py-4">
-                    <i class="bi bi-exclamation-circle fs-4"></i>
-                    <p class="mb-0 mt-2">No records found matching your criteria</p>
-                </td>
-            </tr>
-        `;
-      return;
-    }
 
     if (currentSortColumn) {
       filteredRecords.sort((a, b) => {
@@ -247,8 +194,8 @@
             bValue = getBookTitle(b.bookID);
             return aValue.localeCompare(bValue) * sortDirection;
           case "borrower":
-            aValue = getUserName(a.userID);
-            bValue = getUserName(b.userID);
+            aValue = getUserNames(a.userID);
+            bValue = getUserNames(b.userID);
             return aValue.localeCompare(bValue) * sortDirection;
           case "borrowDate":
             return (
@@ -264,13 +211,27 @@
       });
     }
 
-    issuedBooksTableBody.innerHTML = filteredRecords
+    const tableBody = document.getElementById("issuedBooksTableBody");
+
+    if (filteredRecords.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            <i class="bi bi-exclamation-circle fs-4"></i>
+            <p class="mb-0 mt-2">No records found matching your criteria</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tableBody.innerHTML = filteredRecords
       .map(
         (record) => `
       <tr>
         <td class="ps-4">${record.recordID}</td>
         <td>${getBookTitle(record.bookID)}</td>
-        <td>${getUserName(record.userID)}</td>
+        <td>${getUserNames(record.userID)}</td>
         <td>${formatDate(record.borrowDate)}</td>
         <td>${formatDate(record.dueDate)}</td>
         <td>
@@ -288,16 +249,18 @@
           ${
             record.status === "Borrowed"
               ? `
-            <button class="btn btn-sm btn-outline-success me-2 return-btn" data-id="${record.recordID}">
-              <i class="bi bi-check-circle me-1"></i>Mark Returned
-            </button>
-          `
+                <button class="btn btn-sm btn-outline-success me-2 return-btn" data-id="${record.recordID}">
+                  <i class="bi bi-check-circle me-1"></i>Mark Returned
+                </button>
+              `
               : record.status === "Pending"
               ? `
-            <button class="btn btn-sm btn-outline-primary me-2 email-btn" data-id="${record.recordID}" data-user-id="${record.userID}">
-              <i class="bi bi-envelope me-1"></i>Send Email
-            </button>
-          `
+                  <button class="btn btn-sm btn-outline-primary me-2 email-btn" 
+                          data-id="${record.recordID}" 
+                          data-user-id="${record.userID}">
+                    <i class="bi bi-envelope me-1"></i>Send Email
+                  </button>
+                `
               : ""
           }
           <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${
@@ -336,110 +299,153 @@
     });
   }
 
-  function sendReminderEmail(recordId, userId) {
-    const userEmail = getUserEmail(userId);
-    if (!userEmail) {
-      showAlert("User email not found", "danger");
+  async function markAsReturned(recordId) {
+    if (!confirm("Are you sure you want to mark this book as returned?"))
       return;
-    }
 
-    if (confirm(`Send reminder email to ${userEmail}?`)) {
-      setTimeout(() => {
-        showAlert(`Reminder email sent to ${userEmail}`, "success");
-      }, 1000);
-    }
-  }
+    try {
+      const record = allRecords.find((r) => r.recordID == recordId);
+      if (!record) throw new Error("Record not found");
 
-  function markAsReturned(recordId) {
-    if (confirm("Are you sure you want to mark this book as returned?")) {
-      const recordIndex = allRecords.findIndex((r) => r.recordID == recordId);
-      if (recordIndex === -1) return;
-
-      const originalRecord = allRecords[recordIndex];
       const updatedRecord = {
-        ...originalRecord,
+        ...record,
         status: "Returned",
         returnDate: new Date().toISOString().split("T")[0],
       };
 
-      allRecords[recordIndex] = updatedRecord;
-      renderIssuedBooks();
-      showAlert("Updating record...", "info");
-
-      fetch(`${borrowRecordsApiUrl}/${recordId}`, {
+      const response = await fetch(`${borrowRecordsApiUrl}/${recordId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: getAuthorization(),
         },
         body: JSON.stringify(updatedRecord),
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Update failed");
-          return res.json();
-        })
-        .then(() => {
-          const mergedRecord = {
-            ...originalRecord,
-          };
-          allRecords[recordIndex] = mergedRecord;
-          showAlert("Book marked as returned successfully", "success");
+      });
 
-          updateBookAvailableCount(originalRecord.bookID, 1);
-        })
-        .catch((error) => {
-          allRecords[recordIndex] = originalRecord;
-          renderIssuedBooks();
-          showAlert("Failed to update record: " + error.message, "danger");
-        });
+      if (!response.ok) throw new Error("Update failed");
+
+      await updateBookAvailableCount(record.bookID, 1);
+
+      await fetchBorrowRecords();
+      showAlert("Book marked as returned successfully", "success");
+    } catch (error) {
+      console.error("Error marking as returned:", error);
+      showAlert("Failed to update record: " + error.message, "danger");
     }
   }
 
-  function updateBookAvailableCount(bookId, increment) {
-    if (!window.booksData || !bookId) return;
+  async function updateBookAvailableCount(bookId, increment) {
+    const book = booksData.find((b) => b.bookID == bookId || b.id == bookId);
+    if (!book) return;
 
-    const book = window.booksData.find(
-      (b) => b.bookID == bookId || b.id == bookId
-    );
-    if (book) {
-      const updatedCopies = (parseInt(book.availableCopies) || 0) + increment;
-      fetch(`${booksApiUrl}/${book.bookID || book.id}`, {
+    const updatedCopies = (parseInt(book.availableCopies) || 0) + increment;
+
+    try {
+      await fetch(`${booksApiUrl}/${book.bookID || book.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        Authorization: getAuthorization(),
-        body: JSON.stringify({ availableCopies: updatedCopies }),
-      }).catch(console.error);
-    }
-  }
-
-  function deleteRecord(recordId) {
-    if (confirm("Are you sure you want to delete this record?")) {
-      fetch(`${borrowRecordsApiUrl}/${recordId}`, {
-        method: "DELETE",
         headers: {
+          "Content-Type": "application/json",
           Authorization: getAuthorization(),
         },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Delete failed");
-          return fetchBorrowRecords();
-        })
-        .then(() => {
-          renderIssuedBooks();
-          showAlert("Record deleted successfully", "success");
-        })
-        .catch((error) => {
-          console.error("Error deleting record:", error);
-          showAlert("Failed to delete record", "danger");
-        });
+        body: JSON.stringify({ ...book, availableCopies: updatedCopies }),
+      });
+
+      const bookIndex = booksData.findIndex(
+        (b) => b.bookID == bookId || b.id == bookId
+      );
+      if (bookIndex !== -1) {
+        booksData[bookIndex].availableCopies = updatedCopies;
+      }
+    } catch (error) {
+      console.error("Error updating book copies:", error);
     }
   }
 
+  async function deleteRecord(recordId) {
+    if (!confirm("Are you sure you want to delete this record?")) return;
+
+    try {
+      const response = await fetch(`${borrowRecordsApiUrl}/${recordId}`, {
+        method: "DELETE",
+        headers: { Authorization: getAuthorization() },
+      });
+
+      if (!response.ok) throw new Error("Delete failed");
+
+      const record = allRecords.find((r) => r.recordID == recordId);
+      if (record && record.status === "Borrowed") {
+        await updateBookAvailableCount(record.bookID, 1);
+      }
+
+      await fetchBorrowRecords();
+      showAlert("Record deleted successfully", "success");
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      showAlert("Failed to delete record", "danger");
+    }
+  }
+
+  async function sendReminderEmail(recordId, userId) {
+    try {
+      const userEmail = getUserEmails(userId);
+      if (!userEmail) {
+        showAlert("User email not found", "danger");
+        return;
+      }
+
+      if (!confirm(`Send reminder email to ${userEmail}?`)) return;
+
+      const record = allRecords.find((r) => r.recordID == recordId);
+      const bookTitle = getBookTitle(record.bookID);
+      const userName = getUserNames(userId);
+
+      const emailRequest = {
+        to: userEmail,
+        subject: `Reminder: ${record.status} Book - ${bookTitle}`,
+        text: `Dear ${userName},\n\nThis is a reminder about your ${record.status.toLowerCase()} book "${bookTitle}".\n\n${
+          record.status === "Borrowed"
+            ? `The due date is ${formatDate(
+                record.dueDate
+              )}. Please return it on time.\n\n`
+            : "Please visit the library to complete the borrowing process.\n\n"
+        }Thank you,\nLibrary Management System`,
+      };
+
+      console.log("Sending email request:", emailRequest);
+
+      const response = await fetch(
+        "http://localhost:8080/api/borrowRecords/send",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: getAuthorization(),
+          },
+          body: JSON.stringify(emailRequest),
+        }
+      );
+
+      console.log("Email response:", response);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message ||
+            "Email sending failed with status: " + response.status
+        );
+      }
+
+      showAlert(`Reminder email sent to ${userEmail}`, "success");
+    } catch (error) {
+      console.error("Error sending email:", error);
+      showAlert(`Failed to send email: ${error.message}`, "danger");
+    }
+  }
   function showAlert(message, type) {
     const existingAlert = document.querySelector(".alert");
     if (existingAlert) existingAlert.remove();
 
-    const alertDiv = document.createElement("div");
+    const alertDiv = docume-nt.createElement("div");
     alertDiv.className = `alert alert-${type} alert-dismissible fade show fixed-top mx-auto mt-3`;
     alertDiv.style.maxWidth = "500px";
     alertDiv.style.zIndex = "1100";
@@ -450,5 +456,10 @@
     `;
 
     document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+      alertDiv.classList.remove("show");
+      setTimeout(() => alertDiv.remove(), 150);
+    }, 5000);
   }
 </script>
