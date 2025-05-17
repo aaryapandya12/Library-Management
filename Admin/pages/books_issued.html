@@ -278,10 +278,11 @@
       btn.addEventListener("click", () => markAsReturned(btn.dataset.id));
     });
 
+    // Change this part in renderIssuedBooks()
     document.querySelectorAll(".email-btn").forEach((btn) => {
-      btn.addEventListener("click", () =>
-        sendReminderEmail(btn.dataset.id, btn.dataset.userId)
-      );
+      btn.addEventListener("click", function () {
+        sendReminderEmail(this.dataset.id, this.dataset.userId);
+      });
     });
 
     document.querySelectorAll(".delete-btn").forEach((btn) => {
@@ -386,14 +387,40 @@
   }
 
   async function sendReminderEmail(recordId, userId) {
+    let sendButton = null;
+    let originalButtonHTML = "";
+    let originalButtonText = "";
+
     try {
+      sendButton = document.querySelector(
+        `.email-btn[data-id="${recordId}"][data-user-id="${userId}"]`
+      );
+
+      if (sendButton) {
+        originalButtonHTML = sendButton.innerHTML;
+        originalButtonText = sendButton.textContent.trim();
+
+        sendButton.disabled = true;
+        sendButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-1" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </span>
+                Sending...
+            `;
+        void sendButton.offsetWidth;
+      }
+
       const userEmail = getUserEmails(userId);
       if (!userEmail) {
         showAlert("User email not found", "danger");
+        resetButtonState();
         return;
       }
 
-      if (!confirm(`Send reminder email to ${userEmail}?`)) return;
+      if (!confirm(`Send reminder email to ${userEmail}?`)) {
+        resetButtonState();
+        return;
+      }
 
       const record = allRecords.find((r) => r.recordID == recordId);
       const bookTitle = getBookTitle(record.bookID);
@@ -411,8 +438,6 @@
         }Thank you,\nLibrary Management System`,
       };
 
-      console.log("Sending email request:", emailRequest);
-
       const response = await fetch(
         "http://localhost:8080/api/borrowRecords/send",
         {
@@ -425,8 +450,6 @@
         }
       );
 
-      console.log("Email response:", response);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(
@@ -435,17 +458,34 @@
         );
       }
 
+      if (sendButton) {
+        sendButton.innerHTML = `
+                <i class="bi bi-check-circle-fill text-success me-1"></i>
+                Sent successfully
+            `;
+
+        setTimeout(resetButtonState, 2000);
+      }
+
       showAlert(`Reminder email sent to ${userEmail}`, "success");
     } catch (error) {
       console.error("Error sending email:", error);
       showAlert(`Failed to send email: ${error.message}`, "danger");
+      resetButtonState();
+    }
+
+    function resetButtonState() {
+      if (sendButton && originalButtonHTML) {
+        sendButton.disabled = false;
+        sendButton.innerHTML = originalButtonHTML;
+      }
     }
   }
   function showAlert(message, type) {
     const existingAlert = document.querySelector(".alert");
     if (existingAlert) existingAlert.remove();
 
-    const alertDiv = docume-nt.createElement("div");
+    const alertDiv = docume - nt.createElement("div");
     alertDiv.className = `alert alert-${type} alert-dismissible fade show fixed-top mx-auto mt-3`;
     alertDiv.style.maxWidth = "500px";
     alertDiv.style.zIndex = "1100";

@@ -4,7 +4,6 @@
   </div>
   <div class="card-body">
     <div class="d-flex justify-content-between mb-4">
-      
       <div class="input-group" style="width: 300px">
         <input
           type="text"
@@ -45,7 +44,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="addMemberModalLabel">Add New Member</h5>
+        <h5 class="modal-title" id="addMemberModalLabel">Edit Member</h5>
         <button
           type="button"
           class="btn-close btn-close-white"
@@ -185,6 +184,8 @@
     let allBooks = [];
     let allBorrowRecords = [];
     let allQueries = [];
+    let currentPage = 0;
+    let totalPages = 0;
 
     let editId = null;
     let sortDirection = 1;
@@ -367,11 +368,7 @@
           }">
             <i class="fa fa-eye"></i>
           </button>
-          <button class="btn btn-sm btn-primary me-1 edit-btn" data-id="${
-            user.userID
-          }">
-            <i class="fa fa-edit"></i>
-          </button>
+         
           <button class="btn btn-sm btn-danger delete-btn" data-id="${
             user.userID
           }">
@@ -385,10 +382,6 @@
 
       document.querySelectorAll(".view-btn").forEach((btn) => {
         btn.addEventListener("click", () => showMemberDetails(btn.dataset.id));
-      });
-
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", () => loadMemberForEdit(btn.dataset.id));
       });
 
       document.querySelectorAll(".delete-btn").forEach((btn) => {
@@ -432,23 +425,6 @@
         document.getElementById("viewDetailsModal")
       );
       modal.show();
-    }
-
-    function loadMemberForEdit(id) {
-      const user = allUsers.find((u) => u.userID == id);
-      if (user) {
-        memberName.value = user.name || "";
-        memberEmail.value = user.email || "";
-        memberPhone.value = user.phone || "";
-
-        submitMemberBtn.innerHTML = `<i class="fa fa-edit me-2"></i>Update Member`;
-        editId = id;
-
-        const modal = new bootstrap.Modal(
-          document.getElementById("addMemberModal")
-        );
-        modal.show();
-      }
     }
 
     function deleteMember(id) {
